@@ -131,7 +131,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "drand"
+name = "drand_client"
 version = "0.0.1"
 dependencies = [
  "anyhow",

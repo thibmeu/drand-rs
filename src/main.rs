@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use drand::{chain::{self, ChainClient}, http_chain_client};
+use drand_client::{chain::{self, ChainClient}, http_chain_client};
 
 #[tokio::main]
 async fn main() -> Result<()> {
