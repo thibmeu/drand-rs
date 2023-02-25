@@ -1,0 +1,74 @@
+/// verify drand signature
+/// inspired from https://github.com/noislabs/drand-verify/blob/1017235f6bcfcc9fb433926c0dc1b9a013bd4df3/src/verify.rs#L58
+use bls12_381::{
+  hash_to_curve::{ExpandMsgXmd, HashToCurve},
+  Bls12, G1Affine, G2Affine, G2Prepared, G2Projective
+};
+use pairing::{group::Group, MultiMillerLoop};
+use anyhow::{anyhow,Result};
+
+const DOMAIN: &[u8] = b"BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
+
+pub fn g1_from_variable(data: &[u8]) -> Result<G1Affine> {
+  if data.len() != 48 {
+      return Err(anyhow!("Invalid Point"));
+  }
+
+  let mut buf = [0u8; 48];
+  buf[..].clone_from_slice(data);
+  g1_from_fixed(buf)
+}
+
+pub fn g2_from_variable(data: &[u8]) -> Result<G2Affine> {
+  if data.len() != 96 {
+      return Err(anyhow!("Invalid Point"));
+  }
+
+  let mut buf = [0u8; 96];
+  buf[..].clone_from_slice(data);
+  g2_from_fixed(buf)
+}
+
+pub fn g1_from_fixed(data: [u8; 48]) -> Result<G1Affine> {
+  Option::from(G1Affine::from_compressed(&data)).ok_or(anyhow!("Decoding Error"))
+}
+
+pub fn g2_from_fixed(data: [u8; 96]) -> Result<G2Affine> {
+  Option::from(G2Affine::from_compressed(&data)).ok_or(anyhow!("Decoding Error"))
+}
+
+pub fn verify(
+  signature: &[u8],
+  message: &[u8],
+  public_key: &[u8],
+) -> Result<bool> {
+  let g: G2Projective = HashToCurve::<ExpandMsgXmd<sha2::Sha256>>::hash_to_curve(message, DOMAIN);
+  let msg_on_curve = G2Affine::from(g);
+  let g1 = G1Affine::generator();
+  let sigma = match g2_from_variable(signature) {
+      Ok(sigma) => sigma,
+      Err(err) => return Err(anyhow!("Verification Error: {}", err)),
+  };
+  let r = g1_from_variable(public_key).unwrap();
+  Ok(fast_pairing_equality(&g1, &sigma, &r, &msg_on_curve))
+}
+
+/// Checks if e(p, q) == e(r, s)
+///
+/// See https://hackmd.io/@benjaminion/bls12-381#Final-exponentiation.
+///
+/// Optimized by this trick:
+///   Instead of doing e(a,b) (in G2) multiplied by e(-c,d) (in G2)
+///   (which is costly is to multiply in G2 because these are very big numbers)
+///   we can do FinalExponentiation(MillerLoop( [a,b], [-c,d] )) which is the same
+///   in an optimized way.
+fn fast_pairing_equality(p: &G1Affine, q: &G2Affine, r: &G1Affine, s: &G2Affine) -> bool {
+  let minus_p = -p;
+  // "some number of (G1, G2) pairs" are the inputs of the miller loop
+  let pair1 = (&minus_p, &G2Prepared::from(*q));
+  let pair2 = (r, &G2Prepared::from(*s));
+  let looped = Bls12::multi_miller_loop(&[pair1, pair2]);
+  // let looped = Bls12::miller_loop([&pair1, &pair2]);
+  let value = looped.final_exponentiation();
+  value.is_identity().into()
+}
