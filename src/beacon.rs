@@ -122,6 +122,8 @@ impl Message for UnchainedBeacon {
 
 #[cfg(test)]
 pub mod tests {
+    use crate::chain::{tests::chained_chain_info, tests::unchained_chain_info};
+
     use super::*;
 
     /// drand mainnet (curl -sS https://drand.cloudflare.com/public/1000000)
@@ -179,6 +181,34 @@ pub mod tests {
             self.randomness == other.randomness
                 && self.round == other.round
                 && self.signature == other.signature
+        }
+    }
+
+    #[test]
+    fn randomness_beacon_verification_success_works() {
+        match chained_beacon().verify(chained_chain_info()) {
+            Ok(ok) => assert!(ok),
+            Err(_err) => panic!("Chained beacon should validate on chained info"),
+        }
+
+        match unchained_beacon().verify(unchained_chain_info()) {
+            Ok(ok) => assert!(ok),
+            Err(_err) => panic!("Unchained beacon should validate on unchained info"),
+        }
+    }
+
+    #[test]
+    fn randomness_beacon_verification_failure_works() {
+        match invalid_beacon().verify(chained_chain_info()) {
+            Ok(ok) => assert!(!ok, "Invalid beacon should not validate"),
+            Err(_err) => panic!("Invalid beacon should not validate without returning an error"),
+        }
+
+        match unchained_beacon().verify(chained_chain_info()) {
+            Ok(ok) => assert!(!ok, "Unchained beacon should not validate on chained info"),
+            Err(_err) => panic!(
+                "Unchained beacon should not validate on chained info without returning an error"
+            ),
         }
     }
 }
