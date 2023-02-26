@@ -1,8 +1,7 @@
-use std::sync::Mutex;
-
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use tokio::time;
+use std::sync::Mutex;
+use std::time;
 
 use crate::{chain::{Chain, ChainOptions, ChainClient, ChainInfo}, beacon::RandomnessBeacon};
 
@@ -44,9 +43,10 @@ impl HttpChainClient {
 
   fn beacon_url(&self, round: String) -> Result<String> {
     let query = match self.options().is_cache() {
-      true => format!("?{:#?}", time::Instant::now()),
+      true => format!("?{}", time::SystemTime::now().duration_since(time::UNIX_EPOCH)?.as_millis()),
       false => String::from(""),
     };
+    println!("{query}");
     Ok(format!("{}/public/{round}{query}", self.chain.base_url()))
   }
 
