@@ -311,7 +311,7 @@ pub mod tests {
         let chain_info = chain.info().await;
         match chain_info {
             Ok(info) => assert_eq!(info, chained_chain_info()),
-            Err(err) => panic!(""),
+            Err(_err) => panic!(""),
         }
     }
 
@@ -330,7 +330,7 @@ pub mod tests {
         let chain_info = chain.info().await;
         match chain_info {
             Ok(_) => panic!(""),
-            Err(err) => (),
+            Err(_err) => (),
         }
     }
 }

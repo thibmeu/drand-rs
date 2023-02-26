@@ -152,7 +152,7 @@ mod tests {
         // info endpoint
         let info = match no_cache_client.chain_info().await {
             Ok(info) => info,
-            Err(err) => panic!("fetch should have succeded"),
+            Err(_err) => panic!("fetch should have succeded"),
         };
         assert_eq!(info, chained_chain_info());
         // do it again to see if it's cached or not
@@ -162,7 +162,7 @@ mod tests {
         // latest endpoint
         let latest = match no_cache_client.latest().await {
             Ok(beacon) => beacon,
-            Err(err) => panic!("fetch should have succeded"),
+            Err(_err) => panic!("fetch should have succeded"),
         };
         assert_eq!(latest, chained_beacon());
         // do it again to see if it's cached or not
@@ -201,7 +201,7 @@ mod tests {
         // info endpoint
         let info = match cache_client.chain_info().await {
             Ok(info) => info,
-            Err(err) => panic!("fetch should have succeded"),
+            Err(_err) => panic!("fetch should have succeded"),
         };
         assert_eq!(info, chained_chain_info());
         // do it again to see if it's cached or not
@@ -211,7 +211,7 @@ mod tests {
         // latest endpoint
         let latest = match cache_client.latest().await {
             Ok(beacon) => beacon,
-            Err(err) => panic!("fetch should have succeded"),
+            Err(_err) => panic!("fetch should have succeded"),
         };
         assert_eq!(latest, chained_beacon());
         // do it again to see if it's cached or not
@@ -287,8 +287,8 @@ mod tests {
 
         // latest endpoint
         match client.latest().await {
-            Ok(beacon) => panic!("Beacon should not validate"),
-            Err(err) => (),
+            Ok(_beacon) => panic!("Beacon should not validate"),
+            Err(_err) => (),
         }
     }
 
@@ -350,8 +350,8 @@ mod tests {
         );
 
         let _ = match invalid_client.latest().await {
-            Ok(beacon) => panic!("Beacon should not validate"),
-            Err(err) => (),
+            Ok(_beacon) => panic!("Beacon should not validate"),
+            Err(_err) => (),
         };
         // test with not the correct public_key
         let chained_info = chained_chain_info();
@@ -368,8 +368,8 @@ mod tests {
         );
 
         let _ = match invalid_client.latest().await {
-            Ok(beacon) => panic!("Beacon should not validate"),
-            Err(err) => (),
+            Ok(_beacon) => panic!("Beacon should not validate"),
+            Err(_err) => (),
         };
     }
 }
