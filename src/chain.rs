@@ -28,8 +28,28 @@ impl ChainInfo {
         self.public_key.clone()
     }
 
+    pub fn period(&self) -> u64 {
+        self.period
+    }
+
+    pub fn genesis_time(&self) -> u64 {
+        self.genesis_time
+    }
+
+    pub fn hash(&self) -> String {
+        self.hash.clone()
+    }
+
+    pub fn group_hash(&self) -> String {
+        self.group_hash.clone()
+    }
+
     pub fn scheme_id(&self) -> String {
         self.scheme_id.clone()
+    }
+
+    pub fn metadata(&self) -> ChainMetadata {
+        self.metadata.clone()
     }
 }
 
@@ -61,13 +81,23 @@ impl Chain {
 pub struct ChainOptions {
     is_beacon_verification: bool,
     is_cache: bool,
+    chain_verification: ChainVerification,
 }
 
 impl ChainOptions {
-    pub fn new(is_beacon_verification: bool, is_cache: bool) -> Self {
+    pub fn new(
+        is_beacon_verification: bool,
+        is_cache: bool,
+        chain_verification: Option<ChainVerification>,
+    ) -> Self {
+        let chain_verification = match chain_verification {
+            Some(cv) => cv,
+            None => ChainVerification::default(),
+        };
         Self {
             is_beacon_verification,
             is_cache,
+            chain_verification,
         }
     }
 
@@ -78,11 +108,45 @@ impl ChainOptions {
     pub fn is_cache(&self) -> bool {
         self.is_cache
     }
+
+    pub fn verify(&self, info: ChainInfo) -> bool {
+        self.chain_verification.verify(info)
+    }
 }
 
 impl Default for ChainOptions {
     fn default() -> Self {
-        Self::new(true, true)
+        Self::new(true, true, None)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ChainVerification {
+    hash: Option<String>,
+    public_key: Option<String>,
+}
+
+impl ChainVerification {
+    pub fn new(hash: Option<String>, public_key: Option<String>) -> Self {
+        Self { hash, public_key }
+    }
+
+    pub fn verify(&self, info: ChainInfo) -> bool {
+        let ok_hash = match &self.hash {
+            Some(h) => info.hash == *h,
+            None => true,
+        };
+        let ok_public_key = match &self.public_key {
+            Some(pk) => info.public_key == *pk,
+            None => true,
+        };
+        ok_hash && ok_public_key
+    }
+}
+
+impl Default for ChainVerification {
+    fn default() -> Self {
+        Self::new(None, None)
     }
 }
 

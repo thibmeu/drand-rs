@@ -8,6 +8,9 @@ use crate::{
     chain::{Chain, ChainClient, ChainInfo, ChainOptions},
 };
 
+/// HTTP Client for drand
+/// Queries a specified HTTP endpoint given by `chain`, with specific `options`
+/// By default, the client verifies answers, and caches retrieved chain informations
 pub struct HttpChainClient {
     chain: Chain,
     options: ChainOptions,
@@ -35,12 +38,19 @@ impl HttpChainClient {
                 Some(info) => Ok(info),
                 None => {
                     let info = self.chain.info().await?;
+                    if !self.options().verify(info.clone()) {
+                        return Err(anyhow!("Chain info is invalid"));
+                    }
                     *self.cached_chain_info.lock().unwrap() = Some(info.clone());
                     Ok(info)
                 }
             }
         } else {
-            Ok(self.chain.info().await?)
+            let info = self.chain.info().await?;
+            if !self.options().verify(info.clone()) {
+                return Err(anyhow!("Chain info is invalid"));
+            }
+            Ok(info)
         }
     }
 
