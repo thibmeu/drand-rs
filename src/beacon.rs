@@ -14,7 +14,7 @@ pub enum RandomnessBeacon {
 
 impl RandomnessBeacon {
     pub fn verify(&self, info: ChainInfo) -> Result<bool> {
-      if info.scheme_id() != "pedersen-bls-chained" {
+      if self.scheme_id() != info.scheme_id() {
         return Ok(false);
       }
 
@@ -44,6 +44,13 @@ impl RandomnessBeacon {
         Self::ChainedBeacon(chained) => chained.randomness.clone(),
         Self::UnchainedBeacon(unchained) => unchained.randomness.clone(),
       }
+    }
+
+    pub fn scheme_id(&self) -> String {
+      match self {
+        Self::ChainedBeacon(_) => "pedersen-bls-chained",
+        Self::UnchainedBeacon(_) => "pedersen-bls-unchained",
+      }.to_string()
     }
 
     pub fn signature(&self) -> String {
