@@ -1,0 +1,12 @@
+[package]
+name = "example"
+description = "An example of how to use drand-rs."
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.69"
+drand_client = { path = "../drand_client" }
+tokio = { version = "1.25.0", features = ["full"] }
