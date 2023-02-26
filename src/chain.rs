@@ -61,10 +61,6 @@ pub struct ChainOptions {
 }
 
 impl ChainOptions {
-  pub fn default() -> Self {
-    Self::new(true, true)
-  }
-
   pub fn new(is_beacon_verification: bool, is_cache: bool) -> Self {
     Self {
       is_beacon_verification,
@@ -78,6 +74,12 @@ impl ChainOptions {
 
   pub fn is_cache(&self) -> bool {
     self.is_cache
+  }
+}
+
+impl Default for ChainOptions {
+  fn default() -> Self {
+    Self::new(true, true)
   }
 }
 

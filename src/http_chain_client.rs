@@ -13,7 +13,7 @@ pub struct HttpChainClient {
 
 impl HttpChainClient {
   pub fn new(chain: Chain, options: Option<ChainOptions>) -> Self {
-    let options = match options.clone() {
+    let options = match options {
       Some(options) => options,
       None => ChainOptions::default(),
     };
@@ -29,7 +29,7 @@ impl HttpChainClient {
     if self.options().is_cache() {
       let cached = self.cached_chain_info.lock().unwrap().to_owned();
       match cached {
-        Some(info) => Ok(info.clone()),
+        Some(info) => Ok(info),
         None => {
           let info = self.chain.info().await?;
           *self.cached_chain_info.lock().unwrap() = Some(info.clone());
@@ -46,7 +46,6 @@ impl HttpChainClient {
       true => format!("?{}", time::SystemTime::now().duration_since(time::UNIX_EPOCH)?.as_millis()),
       false => String::from(""),
     };
-    println!("{query}");
     Ok(format!("{}/public/{round}{query}", self.chain.base_url()))
   }
 
