@@ -21,7 +21,7 @@ impl RandomnessBeacon {
       let message = self.message()?;
       let public_key = hex::decode(info.public_key())?;
       let signature = hex::decode(self.signature())?;
-      let signature_verify = crate::verify::verify(&signature, &message, &public_key)?;
+      let signature_verify = crate::bls_signatures::verify(&signature, &message, &public_key)?;
 
       let mut hasher = Sha256::new();
       hasher.update(hex::decode(self.signature())?);

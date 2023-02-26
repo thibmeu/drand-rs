@@ -1,4 +1,4 @@
-pub mod http_chain_client;
-pub mod chain;
 pub mod beacon;
-pub mod verify;
+pub mod bls_signatures;
+pub mod chain;
+pub mod http_chain_client;
