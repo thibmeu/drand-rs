@@ -188,3 +188,149 @@ pub trait ChainClient {
     /// Chain the client is associated to.
     fn chain(&self) -> Chain;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// drand mainnet (curl -sS https://drand.cloudflare.com/info)
+    fn chained_chain_info() -> ChainInfo {
+        serde_json::from_str(r#"{
+            "public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
+            "period": 30,
+            "genesis_time": 1595431050,
+            "hash": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
+            "groupHash": "176f93498eac9ca337150b46d21dd58673ea4e3581185f869672e59fa4cb390a",
+            "schemeID": "pedersen-bls-chained",
+            "metadata": {
+                "beaconID": "default"
+            }
+        }"#).unwrap()
+    }
+
+    /// drand mainnet (curl -sS https://pl-us.testnet.drand.sh/7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf/info)
+    fn unchained_chain_info() -> ChainInfo {
+        serde_json::from_str(r#"{
+            "public_key": "8200fc249deb0148eb918d6e213980c5d01acd7fc251900d9260136da3b54836ce125172399ddc69c4e3e11429b62c11",
+            "period": 3,
+            "genesis_time": 1651677099,
+            "hash": "7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf",
+            "groupHash": "65083634d852ae169e21b6ce5f0410be9ed4cc679b9970236f7875cff667e13d",
+            "schemeID": "pedersen-bls-unchained",
+            "metadata": {
+                "beaconID": "testnet-unchained-3s"
+            }
+        }"#).unwrap()
+    }
+
+    #[test]
+    fn chain_verification_success_works() {
+        // Full validation should pass
+        let full_verification = ChainVerification::new(
+            Some(chained_chain_info().hash()),
+            Some(chained_chain_info().public_key()),
+        );
+        assert!(full_verification.verify(chained_chain_info()));
+
+        // Validate only the hash
+        let hash_verification = ChainVerification::new(Some(chained_chain_info().hash()), None);
+        assert!(hash_verification.verify(chained_chain_info()));
+        let hash_verification = ChainVerification::new(Some(chained_chain_info().hash()), None);
+        let mut chain_info = chained_chain_info();
+        chain_info.public_key = unchained_chain_info().public_key();
+        assert!(hash_verification.verify(chain_info));
+
+        // Validate only the public key
+        let public_key_verification =
+            ChainVerification::new(None, Some(chained_chain_info().public_key()));
+        assert!(public_key_verification.verify(chained_chain_info()));
+        let mut chain_info = chained_chain_info();
+        chain_info.hash = unchained_chain_info().hash();
+        assert!(public_key_verification.verify(chain_info));
+
+        // Don't validate
+        let no_verification = ChainVerification::new(None, None);
+        assert!(no_verification.verify(chained_chain_info()));
+    }
+
+    #[test]
+    fn chain_verification_failure_works() {
+        // Full validation should fail when public key is invalid
+        let full_verification = ChainVerification::new(
+            Some(chained_chain_info().hash()),
+            Some(unchained_chain_info().public_key()),
+        );
+        assert!(!full_verification.verify(chained_chain_info()));
+        // Full validation should fail when hash is invalid
+        let full_verification = ChainVerification::new(
+            Some(unchained_chain_info().hash()),
+            Some(chained_chain_info().public_key()),
+        );
+        assert!(!full_verification.verify(chained_chain_info()));
+
+        // Validate only the hash works with invalid public key
+        let hash_verification = ChainVerification::new(Some(unchained_chain_info().hash()), None);
+        assert!(!hash_verification.verify(chained_chain_info()));
+
+        // Validate only the public key
+        let public_key_verification =
+            ChainVerification::new(None, Some(unchained_chain_info().public_key()));
+        assert!(!public_key_verification.verify(chained_chain_info()));
+    }
+
+    impl PartialEq for ChainMetadata {
+        fn eq(&self, other: &Self) -> bool {
+            self.beacon_id == other.beacon_id
+        }
+    }
+
+    impl PartialEq for ChainInfo {
+        fn eq(&self, other: &Self) -> bool {
+            self.public_key == other.public_key
+                && self.period == other.period
+                && self.genesis_time == other.genesis_time
+                && self.hash == other.hash
+                && self.group_hash == other.group_hash
+                && self.scheme_id == other.scheme_id
+                && self.metadata == other.metadata
+        }
+    }
+
+    #[tokio::test]
+    async fn chain_info_retrieval_success_works() {
+        let mut server = mockito::Server::new_async().await;
+        let _m = server
+            .mock("GET", "/info")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(serde_json::to_string(&chained_chain_info()).unwrap())
+            .create_async()
+            .await;
+
+        let chain = Chain::new(server.url().as_str());
+        let chain_info = chain.info().await;
+        match chain_info {
+            Ok(info) => assert_eq!(info, chained_chain_info()),
+            Err(err) => panic!(""),
+        }
+    }
+
+    #[tokio::test]
+    async fn chain_info_retrieval_failure_works() {
+        let mut server = mockito::Server::new_async().await;
+        let _m = server
+            .mock("GET", "/info")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"not_chain_info": true}"#)
+            .create_async()
+            .await;
+
+        let chain = Chain::new(server.url().as_str());
+        let chain_info = chain.info().await;
+        match chain_info {
+            Ok(_) => panic!(""),
+            Err(err) => (),
+        }
+    }
+}

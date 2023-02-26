@@ -21,4 +21,5 @@ tokio = { version = "1.25.0", features = ["full"] }
 
 [dev-dependencies]
 hex-literal = "0.3.4"
+mockito = "0.32.3"
 
