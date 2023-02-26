@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use tokio::time;
@@ -7,7 +9,7 @@ use crate::{chain::{Chain, ChainOptions, ChainClient, ChainInfo}, beacon::Random
 pub struct HttpChainClient {
   chain: Chain,
   options: ChainOptions,
-  cached_chain_info: Option<ChainInfo>,
+  cached_chain_info: Mutex<Option<ChainInfo>>,
 }
 
 impl HttpChainClient {
@@ -20,17 +22,18 @@ impl HttpChainClient {
     Self {
       chain,
       options,
-      cached_chain_info: None,
+      cached_chain_info: Mutex::new(None),
     }
   }
 
-  async fn chain_info(&mut self) -> Result<ChainInfo> {
+  async fn chain_info(&self) -> Result<ChainInfo> {
     if self.options().is_cache() {
-      match &self.cached_chain_info {
+      let cached = self.cached_chain_info.lock().unwrap().to_owned();
+      match cached {
         Some(info) => Ok(info.clone()),
         None => {
           let info = self.chain.info().await?;
-          self.cached_chain_info = Some(info.clone());
+          *self.cached_chain_info.lock().unwrap() = Some(info.clone());
           Ok(info)
         }
       }
@@ -47,7 +50,7 @@ impl HttpChainClient {
     Ok(format!("{}/public/{round}{query}", self.chain.base_url()))
   }
 
-  async fn verify_beacon(&mut self, beacon: RandomnessBeacon) -> Result<RandomnessBeacon> {
+  async fn verify_beacon(&self, beacon: RandomnessBeacon) -> Result<RandomnessBeacon> {
     if !self.options().is_beacon_verification() {
       return Ok(beacon);
     }
@@ -65,13 +68,13 @@ impl ChainClient for HttpChainClient {
         self.options.clone()
     }
 
-    async fn latest(&mut self) -> Result<RandomnessBeacon> {
+    async fn latest(&self) -> Result<RandomnessBeacon> {
       let beacon = reqwest::get(self.beacon_url(String::from("latest"))?).await?.json::<RandomnessBeacon>().await?;
 
       self.verify_beacon(beacon).await
     }
 
-    async fn get(&mut self, round_number: u64) -> Result<RandomnessBeacon> {
+    async fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
       let beacon = reqwest::get(self.beacon_url(round_number.to_string())?).await?.json::<RandomnessBeacon>().await?;
 
       self.verify_beacon(beacon).await

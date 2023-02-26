@@ -84,7 +84,7 @@ impl ChainOptions {
 #[async_trait]
 pub trait ChainClient {
     fn options(&self) -> ChainOptions;
-    async fn latest(&mut self) -> Result<RandomnessBeacon>;
-    async fn get(&mut self, round_number: u64) -> Result<RandomnessBeacon>;
+    async fn latest(&self) -> Result<RandomnessBeacon>;
+    async fn get(&self, round_number: u64) -> Result<RandomnessBeacon>;
     fn chain(&self) -> Chain;
 }

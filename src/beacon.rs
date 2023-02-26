@@ -1,11 +1,11 @@
 use anyhow::Result;
-use serde::{Serialize as SerdeSerialize, Deserialize as SerdeDeserialize};
+use serde::{Serialize, Deserialize};
 use sha2::{Sha256, Digest};
 
 use crate::chain::ChainInfo;
 
 
-#[derive(Debug, SerdeSerialize, SerdeDeserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RandomnessBeacon {
     ChainedBeacon(ChainedBeacon),
@@ -74,7 +74,7 @@ trait Message {
   fn message(&self) -> Result<Vec<u8>>;
 }
 
-#[derive(Debug, SerdeSerialize, SerdeDeserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ChainedBeacon {
     round: u64,
     randomness: String,
@@ -96,7 +96,7 @@ impl Message for ChainedBeacon {
   }
 }
 
-#[derive(Debug, SerdeSerialize, SerdeDeserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UnchainedBeacon {
     round: u64,
     randomness: String,
