@@ -15,6 +15,7 @@ pub struct HttpChainClient {
     chain: Chain,
     options: ChainOptions,
     cached_chain_info: Mutex<Option<ChainInfo>>,
+    http_client: reqwest::Client,
 }
 
 impl HttpChainClient {
@@ -28,6 +29,10 @@ impl HttpChainClient {
             chain,
             options,
             cached_chain_info: Mutex::new(None),
+            http_client: reqwest::Client::builder()
+                .user_agent("drand-rs")
+                .build()
+                .unwrap(),
         }
     }
 
@@ -89,7 +94,10 @@ impl ChainClient for HttpChainClient {
     }
 
     async fn latest(&self) -> Result<RandomnessBeacon> {
-        let beacon = reqwest::get(self.beacon_url(String::from("latest"))?)
+        let beacon = self
+            .http_client
+            .get(self.beacon_url(String::from("latest"))?)
+            .send()
             .await?
             .json::<RandomnessBeacon>()
             .await?;
@@ -98,7 +106,10 @@ impl ChainClient for HttpChainClient {
     }
 
     async fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
-        let beacon = reqwest::get(self.beacon_url(round_number.to_string())?)
+        let beacon = self
+            .http_client
+            .get(self.beacon_url(round_number.to_string())?)
+            .send()
             .await?
             .json::<RandomnessBeacon>()
             .await?;
