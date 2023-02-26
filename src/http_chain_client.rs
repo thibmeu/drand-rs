@@ -31,26 +31,29 @@ impl HttpChainClient {
         }
     }
 
+    async fn chain_info_no_cache(&self) -> Result<ChainInfo> {
+        let info = self.chain.info().await?;
+        match self.options().verify(info.clone()) {
+            true => Ok(info),
+            false => Err(anyhow!("Chain info is invalid")),
+        }
+    }
+
     async fn chain_info(&self) -> Result<ChainInfo> {
         if self.options().is_cache() {
             let cached = self.cached_chain_info.lock().unwrap().to_owned();
             match cached {
                 Some(info) => Ok(info),
-                None => {
-                    let info = self.chain.info().await?;
-                    if !self.options().verify(info.clone()) {
-                        return Err(anyhow!("Chain info is invalid"));
+                None => match self.chain_info_no_cache().await {
+                    Ok(info) => {
+                        *self.cached_chain_info.lock().unwrap() = Some(info.clone());
+                        Ok(info)
                     }
-                    *self.cached_chain_info.lock().unwrap() = Some(info.clone());
-                    Ok(info)
-                }
+                    Err(err) => Err(err),
+                },
             }
         } else {
-            let info = self.chain.info().await?;
-            if !self.options().verify(info.clone()) {
-                return Err(anyhow!("Chain info is invalid"));
-            }
-            Ok(info)
+            self.chain_info_no_cache().await
         }
     }
 
