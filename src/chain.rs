@@ -190,11 +190,11 @@ pub trait ChainClient {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
 
     /// drand mainnet (curl -sS https://drand.cloudflare.com/info)
-    fn chained_chain_info() -> ChainInfo {
+    pub fn chained_chain_info() -> ChainInfo {
         serde_json::from_str(r#"{
             "public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
             "period": 30,
@@ -208,8 +208,8 @@ mod tests {
         }"#).unwrap()
     }
 
-    /// drand mainnet (curl -sS https://pl-us.testnet.drand.sh/7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf/info)
-    fn unchained_chain_info() -> ChainInfo {
+    /// drand testnet (curl -sS https://pl-us.testnet.drand.sh/7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf/info)
+    pub fn unchained_chain_info() -> ChainInfo {
         serde_json::from_str(r#"{
             "public_key": "8200fc249deb0148eb918d6e213980c5d01acd7fc251900d9260136da3b54836ce125172399ddc69c4e3e11429b62c11",
             "period": 3,

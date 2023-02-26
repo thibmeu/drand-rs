@@ -119,3 +119,66 @@ impl Message for UnchainedBeacon {
         Ok(hasher.finalize().to_vec())
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    /// drand mainnet (curl -sS https://drand.cloudflare.com/public/1000000)
+    pub fn chained_beacon() -> RandomnessBeacon {
+        serde_json::from_str(r#"{
+            "round": 1000000,
+            "randomness": "a26ba4d229c666f52a06f1a9be1278dcc7a80dbc1dd2004a1ae7b63cb79fd37e",
+            "signature": "87e355169c4410a8ad6d3e7f5094b2122932c1062f603e6628aba2e4cb54f46c3bf1083c3537cd3b99e8296784f46fb40e090961cf9634f02c7dc2a96b69fc3c03735bc419962780a71245b72f81882cf6bb9c961bcf32da5624993bb747c9e5",
+            "previous_signature": "86bbc40c9d9347568967add4ddf6e351aff604352a7e1eec9b20dea4ca531ed6c7d38de9956ffc3bb5a7fabe28b3a36b069c8113bd9824135c3bff9b03359476f6b03beec179d4aeff456f4d34bbf702b9af78c3bb44e1892ace8e581bf4afa9"
+        }"#).unwrap()
+    }
+
+    /// drand testnet (curl -sS https://pl-us.testnet.drand.sh/7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf/public/1000000)
+    pub fn unchained_beacon() -> RandomnessBeacon {
+        serde_json::from_str(r#"{
+            "round": 1000000,
+            "randomness": "6671747f7d838f18159c474579ea19e8d863e8c25e5271fd7f18ca2ac85181cf",
+            "signature": "86b265e10e060805d20dca88f70f6b5e62d5956e7790d32029dfb73fbcd1996bc7aebdea7aeaf74dac0ca2b3ce8f7a6a0399f224a05fe740c0bac9da638212082b0ed21b1a8c5e44a33123f28955ef0713e93e21f6af0cda4073d9a73387434d"
+        }"#).unwrap()
+    }
+
+    /// invalid beacon. Round should be 1,000,000, but it 1
+    pub fn invalid_beacon() -> RandomnessBeacon {
+        serde_json::from_str(r#"{
+            "round": 1,
+            "randomness": "a26ba4d229c666f52a06f1a9be1278dcc7a80dbc1dd2004a1ae7b63cb79fd37e",
+            "signature": "87e355169c4410a8ad6d3e7f5094b2122932c1062f603e6628aba2e4cb54f46c3bf1083c3537cd3b99e8296784f46fb40e090961cf9634f02c7dc2a96b69fc3c03735bc419962780a71245b72f81882cf6bb9c961bcf32da5624993bb747c9e5",
+            "previous_signature": "86bbc40c9d9347568967add4ddf6e351aff604352a7e1eec9b20dea4ca531ed6c7d38de9956ffc3bb5a7fabe28b3a36b069c8113bd9824135c3bff9b03359476f6b03beec179d4aeff456f4d34bbf702b9af78c3bb44e1892ace8e581bf4afa9"
+        }"#).unwrap()
+    }
+
+    impl PartialEq for RandomnessBeacon {
+        fn eq(&self, other: &Self) -> bool {
+            match (self, other) {
+                (Self::ChainedBeacon(chained), Self::ChainedBeacon(other)) => chained == other,
+                (Self::UnchainedBeacon(unchained), Self::UnchainedBeacon(other)) => {
+                    unchained == other
+                }
+                _ => false,
+            }
+        }
+    }
+
+    impl PartialEq for ChainedBeacon {
+        fn eq(&self, other: &Self) -> bool {
+            self.randomness == other.randomness
+                && self.round == other.round
+                && self.signature == other.signature
+                && self.previous_signature == other.previous_signature
+        }
+    }
+
+    impl PartialEq for UnchainedBeacon {
+        fn eq(&self, other: &Self) -> bool {
+            self.randomness == other.randomness
+                && self.round == other.round
+                && self.signature == other.signature
+        }
+    }
+}
