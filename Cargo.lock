@@ -169,6 +169,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "clap",
+ "colored",
  "drand_client",
  "serde",
  "serde_json",

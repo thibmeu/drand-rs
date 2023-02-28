@@ -33,15 +33,19 @@ enum Commands {
         /// Address of the beacon
         #[arg(long, value_hint = ValueHint::Url)]
         url: String,
-        /// Address of the beacon
-        #[arg(long)]
+        /// Enable beacon response validation
+        #[arg(long, default_value_t = true)]
         verify: bool,
+        /// Output format
+        #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
+        format: print::Format,
         /// Round number to retrieve. Leave empty to retrieve the latest round
         beacon: Option<u64>,
     },
 }
 
 mod cmd;
+mod print;
 
 #[tokio::main]
 async fn main() {
@@ -51,8 +55,9 @@ async fn main() {
         Commands::Get {
             url,
             verify,
+            format,
             beacon,
-        } => cmd::get(url, verify, beacon).await,
+        } => cmd::get(url, verify, format, beacon).await,
     };
 
     match output {
