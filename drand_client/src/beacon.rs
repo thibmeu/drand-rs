@@ -128,7 +128,10 @@ impl Message for UnchainedBeacon {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::chain::{tests::chained_chain_info, tests::{unchained_chain_info, unchained_chain_on_g1_info}};
+    use crate::chain::{
+        tests::chained_chain_info,
+        tests::{unchained_chain_info, unchained_chain_on_g1_info},
+    };
 
     use super::*;
 

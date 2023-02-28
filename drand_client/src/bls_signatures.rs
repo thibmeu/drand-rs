@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 /// inspired from https://github.com/noislabs/drand-verify/blob/1017235f6bcfcc9fb433926c0dc1b9a013bd4df3/src/verify.rs#L58
 use bls12_381::{
     hash_to_curve::{ExpandMsgXmd, HashToCurve},
-    Bls12, G1Affine, G2Affine, G2Prepared, G2Projective, G1Projective,
+    Bls12, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective,
 };
 use pairing::{group::Group, MultiMillerLoop};
 
