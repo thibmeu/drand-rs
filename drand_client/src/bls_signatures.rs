@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 /// inspired from https://github.com/noislabs/drand-verify/blob/1017235f6bcfcc9fb433926c0dc1b9a013bd4df3/src/verify.rs#L58
 use bls12_381::{
     hash_to_curve::{ExpandMsgXmd, HashToCurve},
-    Bls12, G1Affine, G2Affine, G2Prepared, G2Projective,
+    Bls12, G1Affine, G2Affine, G2Prepared, G2Projective, G1Projective,
 };
 use pairing::{group::Group, MultiMillerLoop};
 
@@ -13,6 +13,19 @@ const DOMAIN: &[u8] = b"BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
 /// Calculated by `e(g2, signature) == e(pk, hash)`.
 /// `signature` and `hash` are on G2, `public_key` is on G1.
 pub fn verify(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
+    // 48 is bytes of G1
+    // G1Affine::identity().to_compressed().len()
+    if signature.len() == 48 {
+        verify_g1_on_g2(signature, hash, public_key)
+    } else {
+        verify_g2_on_g1(signature, hash, public_key)
+    }
+}
+
+/// Check that signature is the actual aggregate of message and public key.
+/// Calculated by `e(g2, signature) == e(pk, hash)`.
+/// `signature` and `hash` are on G2, `public_key` is on G1.
+pub fn verify_g2_on_g1(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
     let g: G2Projective = HashToCurve::<ExpandMsgXmd<sha2::Sha256>>::hash_to_curve(hash, DOMAIN);
     let hash_on_curve = G2Affine::from(g);
     let g1 = G1Affine::generator();
@@ -20,8 +33,29 @@ pub fn verify(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> 
         Ok(sigma) => sigma,
         Err(err) => return Err(anyhow!("Verification Error: {}", err)),
     };
-    let r = g1_from_variable(public_key).unwrap();
+    let r = match g1_from_variable(public_key) {
+        Ok(r) => r,
+        Err(err) => return Err(anyhow!("Verification Error: {}", err)),
+    };
     Ok(fast_pairing_equality(&g1, &sigma, &r, &hash_on_curve))
+}
+
+/// Check that signature is the actual aggregate of message and public key.
+/// Calculated by `e(g1, signature) == e(pk, hash)`.
+/// `signature` is on G1, `public_key` and `hash` are on G2.
+pub fn verify_g1_on_g2(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
+    let g: G1Projective = HashToCurve::<ExpandMsgXmd<sha2::Sha256>>::hash_to_curve(hash, DOMAIN);
+    let hash_on_curve = G1Affine::from(g);
+    let g2 = G2Affine::generator();
+    let sigma = match g1_from_variable(signature) {
+        Ok(sigma) => sigma,
+        Err(err) => return Err(anyhow!("Verification Error: {}", err)),
+    };
+    let s = match g2_from_variable(public_key) {
+        Ok(r) => r,
+        Err(err) => return Err(anyhow!("Verification Error: {}", err)),
+    };
+    Ok(fast_pairing_equality(&sigma, &g2, &hash_on_curve, &s))
 }
 
 /// Checks if e(p, q) == e(r, s)

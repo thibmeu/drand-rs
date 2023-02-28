@@ -223,6 +223,21 @@ pub mod tests {
         }"#).unwrap()
     }
 
+    /// drand testnet (curl -sS https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c/info)
+    pub fn unchained_chain_on_g1_info() -> ChainInfo {
+        serde_json::from_str(r#"{
+            "public_key": "8f6e58c3dbc6d7e58e32baee6881fecc854161b4227c40b01ae7f0593cea964599648f91a0fa2d6b489a7fb0a552b959014007e05d0c069991be4d064bbe28275bd4c3a3cabf16c48f86f4566909dd6eb6d0e84fd6069c414562ca6abf5fdc13",
+            "period": 3,
+            "genesis_time": 1675262550,
+            "hash": "f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c",
+            "groupHash": "73c191da8ca22628987bc9fb330e2b82f9e38728a8708b10b42b43c90643b798",
+            "schemeID": "bls-unchained-on-g1",
+            "metadata": {
+                "beaconID": "testnet-g"
+            }
+        }"#).unwrap()
+    }
+
     #[test]
     fn chain_verification_success_works() {
         // Full validation should pass
