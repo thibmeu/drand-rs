@@ -33,6 +33,9 @@ enum Commands {
         /// Address of the beacon
         #[arg(long, value_hint = ValueHint::Url)]
         url: String,
+        /// Address of the beacon
+        #[arg(long)]
+        verify: bool,
         /// Round number to retrieve. Leave empty to retrieve the latest round
         beacon: Option<u64>,
     },
@@ -45,7 +48,11 @@ async fn main() {
     let cli = Cli::parse();
 
     let output = match cli.command {
-        Commands::Get { url, beacon } => cmd::get(url, beacon).await,
+        Commands::Get {
+            url,
+            verify,
+            beacon,
+        } => cmd::get(url, verify, beacon).await,
     };
 
     match output {

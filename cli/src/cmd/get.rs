@@ -1,12 +1,14 @@
 use anyhow::Result;
 
-use drand_client::{chain, http_chain_client};
+use drand_client::{
+    chain::{self, ChainClient, ChainOptions},
+    http_chain_client::HttpChainClient,
+};
 
-pub async fn get(url: String, beacon: Option<u64>) -> Result<String> {
+pub async fn get(url: String, verify: bool, beacon: Option<u64>) -> Result<String> {
     let chain = chain::Chain::new(&url);
 
-    use chain::ChainClient;
-    let client = http_chain_client::HttpChainClient::new(chain, None);
+    let client = HttpChainClient::new(chain, Some(ChainOptions::new(verify, true, None)));
 
     let beacon = match beacon {
         Some(round) => client.get(round).await?,
