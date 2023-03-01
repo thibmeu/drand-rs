@@ -39,13 +39,13 @@ pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<Str
 impl print::Print for ChainInfo {
     fn pretty(&self) -> Result<String> {
         Ok(format!(
-            r#"{}: {}
-{}: {}s
-{}: {}
-{}: {}
-{}: {}
-{}: {}
-{}: {}"#,
+            r"{: <10}: {}
+{: <10}: {}s
+{: <10}: {}
+{: <10}: {}
+{: <10}: {}
+{: <10}: {}
+{: <10}: {}",
             "Public Key".bold(),
             self.public_key(),
             "Period".bold(),
@@ -87,7 +87,7 @@ pub fn list(cfg: &config::Local) -> Result<String> {
             .map(|chain| (chain.to_owned(), cfg.chain(chain.as_str()).unwrap().url()))
             .map(|(chain, url)| {
                 if log_enabled!(Level::Warn) {
-                    format!("{chain}\t{url}")
+                    format!("{chain: <20}\t{url}")
                 } else {
                     chain
                 }

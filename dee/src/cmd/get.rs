@@ -15,9 +15,9 @@ use crate::{
 impl Print for RandomnessBeacon {
     fn pretty(&self) -> Result<String> {
         Ok(format!(
-            r#"{}: {}
-{}: {}
-{}: {}"#,
+            r"{: <10}: {}
+{: <10}: {}
+{: <10}: {}",
             "Round".bold(),
             self.round(),
             "Randomness".bold(),
