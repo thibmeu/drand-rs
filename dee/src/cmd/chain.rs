@@ -1,7 +1,12 @@
 use anyhow::{anyhow, Result};
-use drand_core::chain::Chain;
+use chrono::{TimeZone, Utc};
+use colored::Colorize;
+use drand_core::chain::{Chain, ChainInfo};
 
-use crate::config::{self, ConfigChain};
+use crate::{
+    config::{self, ConfigChain},
+    print::{self, print_with_format},
+};
 
 pub async fn add(cfg: &mut config::Local, name: String, url: String) -> Result<String> {
     let chain = Chain::new(&url);
@@ -30,12 +35,46 @@ pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<Str
     Ok(name)
 }
 
-pub fn info(cfg: &config::Local, name: String) -> Result<String> {
+impl print::Print for ChainInfo {
+    fn pretty(&self) -> Result<String> {
+        Ok(format!(
+            r#"{}: {}
+{}: {}s
+{}: {}
+{}: {}
+{}: {}
+{}: {}
+{}: {}"#,
+            "Public Key".bold(),
+            self.public_key(),
+            "Period".bold(),
+            self.period(),
+            "Genesis".bold(),
+            Utc.timestamp_opt(self.genesis_time() as i64, 0)
+                .unwrap(),
+            "Chain Hash".bold(),
+            self.hash(),
+            "Group Hash".bold(),
+            self.group_hash(),
+            "Scheme ID".bold(),
+            self.scheme_id(),
+            "Beacon ID".bold(),
+            self.metadata().beacon_id()
+        ))
+    }
+
+    fn json(&self) -> Result<String> {
+        serde_json::to_string(&self).map_err(|e| anyhow!(e))
+    }
+}
+
+pub fn info(cfg: &config::Local, format: print::Format, name: String) -> Result<String> {
     let chain = match cfg.chain(&name) {
         Some(chain) => chain,
         None => return Err(anyhow!("Chain does not exist")),
     };
-    Ok(serde_json::to_string(&chain.info())?)
+
+    print_with_format(chain.info(), format)
 }
 
 pub fn list(cfg: &config::Local) -> Result<String> {

@@ -30,8 +30,8 @@ struct Cli {
 enum Commands {
     /// Retrieve public randomness
     Get {
-        /// Set default upstream
-        #[arg(short = 'u', long, value_hint = ValueHint::Url, group = "upstream")]
+        /// Set default upstream. If empty, use the lastest upstream
+        #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         set_upstream: Option<String>,
         /// Enable beacon response validation
         #[arg(long, default_value_t = true)]
@@ -40,12 +40,7 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
         format: print::Format,
         /// Round number to retrieve. Leave empty to retrieve the latest round
-        #[arg(requires = "upstream")]
         beacon: Option<u64>,
-
-        /// Chain to fetch randomness from
-        #[arg(group = "upstream")]
-        chain: Option<String>,
     },
     /// Manage set of beacon chains
     Chain {
@@ -65,7 +60,12 @@ enum ChainCommand {
     /// Set URL for remote chain
     SetUrl { name: String, url: String },
     /// Retrieve and store info about remote chain
-    Info { name: String },
+    Info {
+        /// Output format
+        #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
+        format: print::Format,
+        name: String,
+    },
 }
 
 mod cmd;
@@ -82,16 +82,10 @@ async fn main() {
             set_upstream,
             verify,
             format,
-            chain,
             beacon,
         } => {
-            cmd::get(
-                cfg.set_upstream_and_chain(set_upstream, chain).unwrap(),
-                verify,
-                format,
-                beacon,
-            )
-            .await
+            let chain = cfg.set_upstream_and_chain(set_upstream).unwrap();
+            cmd::get(&cfg, format, chain, beacon, verify).await
         }
         Commands::Chain { command } => match command {
             Some(command) => match command {
@@ -99,7 +93,7 @@ async fn main() {
                 ChainCommand::Remove { name } => cmd::chain::remove(&mut cfg, name),
                 ChainCommand::Rename { old, new } => cmd::chain::rename(&mut cfg, old, new),
                 ChainCommand::SetUrl { name, url } => cmd::chain::set_url(&mut cfg, name, url),
-                ChainCommand::Info { name } => cmd::chain::info(&cfg, name),
+                ChainCommand::Info { format, name } => cmd::chain::info(&cfg, format, name),
             },
             None => cmd::chain::list(&cfg),
         },

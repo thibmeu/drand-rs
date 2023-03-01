@@ -8,7 +8,7 @@ use drand_core::{
 };
 
 use crate::{
-    config::ConfigChain,
+    config::{self, ConfigChain},
     print::{print_with_format, Format, Print},
 };
 
@@ -33,10 +33,11 @@ impl Print for RandomnessBeacon {
 }
 
 pub async fn get(
-    chain: ConfigChain,
-    verify: bool,
+    _cfg: &config::Local,
     format: Format,
+    chain: ConfigChain,
     beacon: Option<u64>,
+    verify: bool,
 ) -> Result<String> {
     let chain = chain::Chain::new(&chain.url());
     let info = chain.info().await?;

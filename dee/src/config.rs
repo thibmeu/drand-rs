@@ -84,22 +84,15 @@ impl Local {
         }
     }
 
-    pub fn set_upstream_and_chain(
-        &mut self,
-        set_upstream: Option<String>,
-        chain: Option<String>,
-    ) -> Result<ConfigChain> {
-        if set_upstream.is_some() && chain.is_some() {
-            return Err(anyhow!("Cannot set upstream and chain at the same time"));
-        }
+    pub fn set_upstream_and_chain(&mut self, set_upstream: Option<String>) -> Result<ConfigChain> {
         let chain = match set_upstream {
             Some(upstream) => {
                 self.set_upstream(&upstream)?;
                 upstream
             }
-            None => match chain {
-                Some(chain) => chain,
-                None => self.upstream().unwrap(),
+            None => match self.upstream() {
+                Some(upstream) => upstream,
+                None => return Err(anyhow!("No upstream")),
             },
         };
         Ok(self.chain(&chain).unwrap())
