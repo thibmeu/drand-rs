@@ -2,7 +2,7 @@
 name = "drand_core"
 description = "[ALPHA] A drand client library."
 version = "0.0.1"
-authors = ["Thibault Meunier <dee@thibault.uk>"]
+authors = ["Thibault Meunier <crates@thibault.uk>"]
 edition = "2021"
 readme = "../README.md"
 homepage = "https://github.com/thibmeu/drand-rs/tree/main/drand_core"

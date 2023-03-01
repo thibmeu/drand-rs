@@ -2,7 +2,7 @@
 name = "dee"
 description = "[ALPHA] An cli for drand."
 version = "0.0.1"
-authors = ["Thibault Meunier <dee@thibault.uk>"]
+authors = ["Thibault Meunier <crates@thibault.uk>"]
 edition = "2021"
 readme = "../README.md"
 homepage = "https://github.com/thibmeu/drand-rs"
