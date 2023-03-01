@@ -360,7 +360,7 @@ mod tests {
             )),
         );
 
-        let _ = match invalid_client.latest().await {
+        match invalid_client.latest().await {
             Ok(_beacon) => panic!("Beacon should not validate"),
             Err(_err) => (),
         };
@@ -378,7 +378,7 @@ mod tests {
             )),
         );
 
-        let _ = match invalid_client.latest().await {
+        match invalid_client.latest().await {
             Ok(_beacon) => panic!("Beacon should not validate"),
             Err(_err) => (),
         };

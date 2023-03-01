@@ -42,14 +42,35 @@ enum Commands {
         /// Round number to retrieve. Leave empty to retrieve the latest round
         beacon: Option<u64>,
     },
+    /// Manage set of beacon chains
+    Chain {
+        #[command(subcommand)]
+        command: Option<ChainCommand>,
+    },
+}
+
+#[derive(Subcommand)]
+enum ChainCommand {
+    /// Add remote chain
+    Add { name: String, url: String },
+    /// Remove remote chain
+    Remove { name: String },
+    /// Rename remote chain
+    Rename { old: String, new: String },
+    /// Set URL for remote chain
+    SetUrl { name: String, url: String },
+    /// Retrieve and store info about remote chain
+    Info { name: String },
 }
 
 mod cmd;
+mod config;
 mod print;
 
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
+    let mut cfg: config::Local = config::Local::load();
 
     let output = match cli.command {
         Commands::Get {
@@ -58,10 +79,23 @@ async fn main() {
             format,
             beacon,
         } => cmd::get(url, verify, format, beacon).await,
+        Commands::Chain { command } => match command {
+            Some(command) => match command {
+                ChainCommand::Add { name, url } => cmd::chain::add(&mut cfg, name, url).await,
+                ChainCommand::Remove { name } => cmd::chain::remove(&mut cfg, name),
+                ChainCommand::Rename { old, new } => cmd::chain::rename(&mut cfg, old, new),
+                ChainCommand::SetUrl { name: _, url: _ } => todo!(),
+                ChainCommand::Info { name } => cmd::chain::info(&cfg, name),
+            },
+            None => cmd::chain::list(&cfg),
+        },
     };
 
     match output {
-        Ok(result) => println!("{result}"),
+        Ok(result) => {
+            cfg.store().unwrap();
+            println!("{result}")
+        }
         Err(err) => {
             eprintln!("{err}");
             process::exit(1)

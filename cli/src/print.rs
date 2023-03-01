@@ -6,7 +6,7 @@ pub enum Format {
     /// Text based format with colors and font weight
     Pretty,
     /// Raw and minified JSON
-    JSON,
+    Json,
 }
 
 pub trait Print {
@@ -17,6 +17,6 @@ pub trait Print {
 pub fn print_with_format<T: Print>(t: T, format: Format) -> Result<String> {
     match format {
         Format::Pretty => t.pretty(),
-        Format::JSON => t.json(),
+        Format::Json => t.json(),
     }
 }

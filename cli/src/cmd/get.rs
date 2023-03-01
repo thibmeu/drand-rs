@@ -39,5 +39,5 @@ pub async fn get(url: String, verify: bool, format: Format, beacon: Option<u64>)
         None => client.latest().await?,
     };
 
-    Ok(print_with_format(beacon, format)?)
+    print_with_format(beacon, format)
 }
