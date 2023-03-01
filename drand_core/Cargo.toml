@@ -1,5 +1,5 @@
 [package]
-name = "drand_client"
+name = "drand_core"
 description = "A drand client."
 version = "0.0.1"
 edition = "2021"

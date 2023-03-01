@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use drand_client::chain::Chain;
+use drand_core::chain::Chain;
 
 use crate::config::{self, ConfigChain};
 

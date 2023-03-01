@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 
-use drand_client::chain::ChainInfo;
+use drand_core::chain::ChainInfo;
 use serde::{Deserialize, Serialize};
 
 pub type Chains = HashMap<String, ConfigChain>;

@@ -164,20 +164,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cli"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "clap",
- "colored",
- "confy",
- "drand_client",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "colored"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -245,6 +231,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eaa37046cc0f6c3cc6090fbdbf73ef0b8ef4cfcc37f6befc0020f63e8cf121e1"
 
 [[package]]
+name = "dee"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "clap",
+ "colored",
+ "confy",
+ "drand_core",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -274,7 +274,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "drand_client"
+name = "drand_core"
 version = "0.0.1"
 dependencies = [
  "anyhow",

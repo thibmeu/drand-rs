@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use colored::Colorize;
-use drand_client::{
+use drand_core::{
     beacon::RandomnessBeacon,
     chain::{self, ChainClient, ChainOptions, ChainVerification},
     http_chain_client::HttpChainClient,
