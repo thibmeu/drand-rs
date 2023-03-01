@@ -17,6 +17,44 @@ dee chain add testnet https://testnet0-api.drand.cloudflare.com/f3827d772c155f95
 dee chain info testnet # Retrieve information about testnet beacon
 ```
 
+## Use drand as a seed
+
+You can leverage drand randomness as a seed for PRNG systems.
+
+### bash
+
+```bash
+RANDOM=$(dee get --format json | jq -r '.randomness'); echo $RANDOM $RANDOM $RANDOM
+```
+
+### Python
+
+```python
+import random
+
+random.seed(int("dee-randomness", 16))
+
+print(random.random())
+print(random.random())
+print(random.random())
+```
+
+### Rust
+
+```rust
+use rand::prelude::*;
+use rand_seeder::{Seeder, SipHasher};
+use rand_pcg::Pcg64;
+
+fn main() {
+    // In one line:
+    let mut rng: Pcg64 = Seeder::from("dee-rng").make_rng();
+    println!("{}", rng.gen_range(0..100));
+    println!("{}", rng.gen_range(0..100));
+    println!("{}", rng.gen_range(0..100));
+}
+```
+
 ## Details
 
 This client supports validation of chained and unchained randomness, both with signature on G1 and on G2.
