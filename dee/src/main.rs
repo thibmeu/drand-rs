@@ -49,6 +49,8 @@ enum Commands {
         #[command(subcommand)]
         command: Option<ChainCommand>,
     },
+    /// Prints path to configuration file
+    Config {},
 }
 
 #[derive(Subcommand)]
@@ -102,6 +104,7 @@ async fn main() {
             },
             None => cmd::chain::list(&cfg),
         },
+        Commands::Config {} => cmd::config(),
     };
 
     match output {
