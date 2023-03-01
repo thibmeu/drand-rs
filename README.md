@@ -6,6 +6,12 @@ The format specification is at [drand.love/docs/specification](https://drand.lov
 
 The reference interroperable Go implementation is available at [drand/drand](https://github.com/drand/drand).
 
+## Install
+
+```bash
+cargo install dee
+```
+
 ## Usage
 
 ```bash
@@ -17,7 +23,7 @@ dee chain add testnet https://testnet0-api.drand.cloudflare.com/f3827d772c155f95
 dee chain info testnet # Retrieve information about testnet beacon
 ```
 
-## Use drand as a seed
+## Seeding your Random Number Generator
 
 You can leverage drand randomness as a seed for PRNG systems.
 

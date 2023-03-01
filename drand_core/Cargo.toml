@@ -1,8 +1,15 @@
 [package]
 name = "drand_core"
-description = "A drand client."
+description = "[ALPHA] A drand client library."
 version = "0.0.1"
+authors = ["Thibault Meunier <dee@thibault.uk>"]
 edition = "2021"
+readme = "../README.md"
+homepage = "https://github.com/thibmeu/drand-rs/tree/main/drand_core"
+repository = "https://github.com/thibmeu/drand-rs"
+keywords = ["drand", "rng", "random"]
+categories = ["cryptography"]
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

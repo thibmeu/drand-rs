@@ -1,8 +1,16 @@
 [package]
 name = "dee"
-description = "An cli for drand."
+description = "[ALPHA] An cli for drand."
 version = "0.0.1"
+authors = ["Thibault Meunier <dee@thibault.uk>"]
 edition = "2021"
+readme = "../README.md"
+homepage = "https://github.com/thibmeu/drand-rs"
+repository = "https://github.com/thibmeu/drand-rs"
+keywords = ["drand", "cli", "rng", "random"]
+categories = ["command-line-utilities", "cryptography"]
+default-run = "dee"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,7 +19,7 @@ anyhow = "1.0.69"
 clap = { version = "4.1.8", features = ["derive"] }
 colored = "2.0.0"
 confy = "0.5.1"
-drand_core = { path = "../drand_core" }
+drand_core = "0.0.1"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
 tokio = { version = "1.25.0", features = ["full"] }
