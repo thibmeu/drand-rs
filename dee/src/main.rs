@@ -22,6 +22,8 @@ use clap::{Parser, Subcommand, ValueHint};
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
+    #[clap(flatten)]
+    verbose: clap_verbosity_flag::Verbosity,
     #[command(subcommand)]
     command: Commands,
 }
@@ -76,6 +78,9 @@ mod print;
 async fn main() {
     let cli = Cli::parse();
     let mut cfg: config::Local = config::Local::load();
+    env_logger::Builder::new()
+        .filter_level(cli.verbose.log_level_filter())
+        .init();
 
     let output = match cli.command {
         Commands::Get {

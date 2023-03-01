@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use chrono::{TimeZone, Utc};
 use colored::Colorize;
 use drand_core::chain::{Chain, ChainInfo};
+use log::{log_enabled, Level};
 
 use crate::{
     config::{self, ConfigChain},
@@ -50,8 +51,7 @@ impl print::Print for ChainInfo {
             "Period".bold(),
             self.period(),
             "Genesis".bold(),
-            Utc.timestamp_opt(self.genesis_time() as i64, 0)
-                .unwrap(),
+            Utc.timestamp_opt(self.genesis_time() as i64, 0).unwrap(),
             "Chain Hash".bold(),
             self.hash(),
             "Group Hash".bold(),
@@ -82,6 +82,17 @@ pub fn list(cfg: &config::Local) -> Result<String> {
     if chains.is_empty() {
         Ok("No chain".to_string())
     } else {
-        Ok(chains.join("\n"))
+        let output: Vec<String> = chains
+            .iter()
+            .map(|chain| (chain.to_owned(), cfg.chain(chain.as_str()).unwrap().url()))
+            .map(|(chain, url)| {
+                if log_enabled!(Level::Warn) {
+                    format!("{chain}\t{url}")
+                } else {
+                    chain
+                }
+            })
+            .collect();
+        Ok(output.join("\n"))
     }
 }
