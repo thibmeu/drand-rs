@@ -38,6 +38,11 @@ impl Local {
     pub fn upstream_chain(&self) -> Option<ConfigChain> {
         self.upstream().and_then(|u| self.chains.get(&u)).cloned()
     }
+
+    pub fn chain(&self, name: &str) -> Option<ConfigChain> {
+        self.chains.get(name).cloned()
+    }
+
     pub fn chains(&self) -> Chains {
         self.chains.clone()
     }
@@ -57,8 +62,47 @@ impl Local {
             self.chains.insert(new, v);
             Ok(())
         } else {
-            Err(anyhow!("Key does not exist"))
+            Err(anyhow!("Chain does not exist"))
         }
+    }
+
+    pub fn set_url_chain(&mut self, name: String, url: String) -> Result<()> {
+        if let Some(v) = self.chains.get_mut(&name) {
+            v.url = url;
+            Ok(())
+        } else {
+            Err(anyhow!("Chain does not exist"))
+        }
+    }
+
+    pub fn set_upstream(&mut self, upstream: &str) -> Result<()> {
+        if self.chains.get(upstream).is_some() {
+            self.upstream = Some(upstream.to_owned());
+            Ok(())
+        } else {
+            Err(anyhow!("Chain does not exist"))
+        }
+    }
+
+    pub fn set_upstream_and_chain(
+        &mut self,
+        set_upstream: Option<String>,
+        chain: Option<String>,
+    ) -> Result<ConfigChain> {
+        if set_upstream.is_some() && chain.is_some() {
+            return Err(anyhow!("Cannot set upstream and chain at the same time"));
+        }
+        let chain = match set_upstream {
+            Some(upstream) => {
+                self.set_upstream(&upstream)?;
+                upstream
+            }
+            None => match chain {
+                Some(chain) => chain,
+                None => self.upstream().unwrap(),
+            },
+        };
+        Ok(self.chain(&chain).unwrap())
     }
 }
 

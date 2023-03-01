@@ -30,9 +30,9 @@ struct Cli {
 enum Commands {
     /// Retrieve public randomness
     Get {
-        /// Address of the beacon
-        #[arg(long, value_hint = ValueHint::Url)]
-        url: String,
+        /// Set default upstream
+        #[arg(short = 'u', long, value_hint = ValueHint::Url, group = "upstream")]
+        set_upstream: Option<String>,
         /// Enable beacon response validation
         #[arg(long, default_value_t = true)]
         verify: bool,
@@ -40,7 +40,12 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
         format: print::Format,
         /// Round number to retrieve. Leave empty to retrieve the latest round
+        #[arg(requires = "upstream")]
         beacon: Option<u64>,
+
+        /// Chain to fetch randomness from
+        #[arg(group = "upstream")]
+        chain: Option<String>,
     },
     /// Manage set of beacon chains
     Chain {
@@ -74,17 +79,26 @@ async fn main() {
 
     let output = match cli.command {
         Commands::Get {
-            url,
+            set_upstream,
             verify,
             format,
+            chain,
             beacon,
-        } => cmd::get(url, verify, format, beacon).await,
+        } => {
+            cmd::get(
+                cfg.set_upstream_and_chain(set_upstream, chain).unwrap(),
+                verify,
+                format,
+                beacon,
+            )
+            .await
+        }
         Commands::Chain { command } => match command {
             Some(command) => match command {
                 ChainCommand::Add { name, url } => cmd::chain::add(&mut cfg, name, url).await,
                 ChainCommand::Remove { name } => cmd::chain::remove(&mut cfg, name),
                 ChainCommand::Rename { old, new } => cmd::chain::rename(&mut cfg, old, new),
-                ChainCommand::SetUrl { name: _, url: _ } => todo!(),
+                ChainCommand::SetUrl { name, url } => cmd::chain::set_url(&mut cfg, name, url),
                 ChainCommand::Info { name } => cmd::chain::info(&cfg, name),
             },
             None => cmd::chain::list(&cfg),

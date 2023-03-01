@@ -3,11 +3,14 @@ use anyhow::Result;
 use colored::Colorize;
 use drand_client::{
     beacon::RandomnessBeacon,
-    chain::{self, ChainClient, ChainOptions},
+    chain::{self, ChainClient, ChainOptions, ChainVerification},
     http_chain_client::HttpChainClient,
 };
 
-use crate::print::{print_with_format, Format, Print};
+use crate::{
+    config::ConfigChain,
+    print::{print_with_format, Format, Print},
+};
 
 impl Print for RandomnessBeacon {
     fn pretty(&self) -> Result<String> {
@@ -29,10 +32,26 @@ impl Print for RandomnessBeacon {
     }
 }
 
-pub async fn get(url: String, verify: bool, format: Format, beacon: Option<u64>) -> Result<String> {
-    let chain = chain::Chain::new(&url);
+pub async fn get(
+    chain: ConfigChain,
+    verify: bool,
+    format: Format,
+    beacon: Option<u64>,
+) -> Result<String> {
+    let chain = chain::Chain::new(&chain.url());
+    let info = chain.info().await?;
 
-    let client = HttpChainClient::new(chain, Some(ChainOptions::new(verify, true, None)));
+    let client = HttpChainClient::new(
+        chain,
+        Some(ChainOptions::new(
+            verify,
+            true,
+            Some(ChainVerification::new(
+                Some(info.hash()),
+                Some(info.public_key()),
+            )),
+        )),
+    );
 
     let beacon = match beacon {
         Some(round) => client.get(round).await?,

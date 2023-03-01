@@ -24,9 +24,15 @@ pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<Strin
     Ok(new)
 }
 
+pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<String> {
+    cfg.set_url_chain(name.clone(), url)?;
+
+    Ok(name)
+}
+
 pub fn info(cfg: &config::Local, name: String) -> Result<String> {
-    let chain = match cfg.chains().get(&name) {
-        Some(chain) => chain.clone(),
+    let chain = match cfg.chain(&name) {
+        Some(chain) => chain,
         None => return Err(anyhow!("Chain does not exist")),
     };
     Ok(serde_json::to_string(&chain.info())?)
