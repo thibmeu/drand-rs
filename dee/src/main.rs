@@ -1,4 +1,5 @@
 use std::process;
+use anyhow::anyhow;
 
 use clap::{Parser, Subcommand, ValueHint};
 
@@ -68,7 +69,7 @@ enum ChainCommand {
         /// Output format
         #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
         format: print::Format,
-        name: String,
+        name: Option<String>,
     },
 }
 
@@ -100,7 +101,7 @@ async fn main() {
                 ChainCommand::Remove { name } => cmd::chain::remove(&mut cfg, name),
                 ChainCommand::Rename { old, new } => cmd::chain::rename(&mut cfg, old, new),
                 ChainCommand::SetUrl { name, url } => cmd::chain::set_url(&mut cfg, name, url),
-                ChainCommand::Info { format, name } => cmd::chain::info(&cfg, format, name),
+                ChainCommand::Info { format, name } => cmd::chain::info(&cfg, format, name.or(cfg.upstream()).ok_or(anyhow!("No chain or upstream")).unwrap()),
             },
             None => cmd::chain::list(&cfg),
         },
