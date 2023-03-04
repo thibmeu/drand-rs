@@ -93,6 +93,17 @@ pub struct ChainedBeacon {
     previous_signature: Vec<u8>,
 }
 
+impl ChainedBeacon {
+    pub fn new(round: u64, randomness: Vec<u8>, signature: Vec<u8>, previous_signature: Vec<u8>) -> RandomnessBeacon {
+        RandomnessBeacon::ChainedBeacon(Self {
+            round,
+            randomness,
+            signature,
+            previous_signature,
+        })
+    }
+}
+
 impl Message for ChainedBeacon {
     fn message(&self) -> Result<Vec<u8>> {
         let mut buf = [0; 96 + 8];
@@ -116,6 +127,16 @@ pub struct UnchainedBeacon {
     randomness: Vec<u8>,
     #[serde(with = "hex::serde")]
     signature: Vec<u8>,
+}
+
+impl UnchainedBeacon {
+    pub fn new(round: u64, randomness: Vec<u8>, signature: Vec<u8>) -> RandomnessBeacon {
+        RandomnessBeacon::UnchainedBeacon(Self {
+            round,
+            randomness,
+            signature,
+        })
+    }
 }
 
 impl Message for UnchainedBeacon {
