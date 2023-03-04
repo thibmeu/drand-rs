@@ -24,12 +24,17 @@ impl ChainMetadata {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChainInfo {
-    public_key: String,
+    #[serde(with = "hex::serde")]
+    public_key: Vec<u8>,
     period: u64,
     genesis_time: u64,
-    hash: String,
-    #[serde(rename(serialize = "groupHash", deserialize = "groupHash"))]
-    group_hash: String,
+    #[serde(with = "hex::serde")]
+    hash: Vec<u8>,
+    #[serde(
+        rename(serialize = "groupHash", deserialize = "groupHash"),
+        with = "hex::serde"
+    )]
+    group_hash: Vec<u8>,
     #[serde(rename(serialize = "schemeID", deserialize = "schemeID"))]
     scheme_id: String,
     metadata: ChainMetadata,
@@ -37,7 +42,7 @@ pub struct ChainInfo {
 
 impl ChainInfo {
     /// Hex encoded BLS12-381 public key.
-    pub fn public_key(&self) -> String {
+    pub fn public_key(&self) -> Vec<u8> {
         self.public_key.clone()
     }
 
@@ -52,12 +57,12 @@ impl ChainInfo {
     }
 
     /// Hash identifying this specific chain of beacons.
-    pub fn hash(&self) -> String {
+    pub fn hash(&self) -> Vec<u8> {
         self.hash.clone()
     }
 
     /// A hash of the group file containing details of all the nodes participating in the network.
-    pub fn group_hash(&self) -> String {
+    pub fn group_hash(&self) -> Vec<u8> {
         self.group_hash.clone()
     }
 
@@ -146,12 +151,12 @@ impl Default for ChainOptions {
 #[derive(Debug, Clone)]
 /// Parameters that can be used to validate a chain is the expected one.
 pub struct ChainVerification {
-    hash: Option<String>,
-    public_key: Option<String>,
+    hash: Option<Vec<u8>>,
+    public_key: Option<Vec<u8>>,
 }
 
 impl ChainVerification {
-    pub fn new(hash: Option<String>, public_key: Option<String>) -> Self {
+    pub fn new(hash: Option<Vec<u8>>, public_key: Option<Vec<u8>>) -> Self {
         Self { hash, public_key }
     }
 

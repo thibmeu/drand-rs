@@ -21,9 +21,9 @@ impl Print for RandomnessBeacon {
             "Round".bold(),
             self.round(),
             "Randomness".bold(),
-            self.randomness(),
+            hex::encode(self.randomness()),
             "Signature".bold(),
-            self.signature()
+            hex::encode(self.signature()),
         ))
     }
 

@@ -18,7 +18,7 @@ anyhow = "1.0.69"
 async-trait = "0.1.64"
 bls12_381 = { version = "0.7.1", features = ["experimental"] }
 futures = "0.3.26"
-hex = "0.4.3"
+hex = { version = "0.4.3", features = ["serde"] }
 pairing = "0.22.0"
 reqwest = { version = "0.11.14", features = [ "json" ] }
 serde = { version = "1.0.152", features = ["derive"] }

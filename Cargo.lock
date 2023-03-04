@@ -328,8 +328,9 @@ dependencies = [
  "clap-verbosity-flag",
  "colored",
  "confy",
- "drand_core 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "drand_core",
  "env_logger",
+ "hex",
  "log",
  "serde",
  "serde_json",
@@ -376,25 +377,6 @@ dependencies = [
  "hex",
  "hex-literal",
  "mockito",
- "pairing",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
-]
-
-[[package]]
-name = "drand_core"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca7501930efbdc098d13509016442b8eb0b51954bdcb059214667f8a501124c2"
-dependencies = [
- "anyhow",
- "async-trait",
- "bls12_381",
- "futures",
- "hex",
  "pairing",
  "reqwest",
  "serde",
@@ -683,6 +665,9 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "hex-literal"
