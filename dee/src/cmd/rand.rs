@@ -32,7 +32,7 @@ impl Print for RandomnessBeacon {
     }
 }
 
-pub async fn get(
+pub async fn rand(
     _cfg: &config::Local,
     format: Format,
     chain: ConfigChain,

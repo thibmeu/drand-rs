@@ -15,18 +15,18 @@ license = "MIT"
 
 [dependencies]
 anyhow = "1.0.69"
-async-trait = "0.1.64"
+async-trait = "0.1.66"
 bls12_381 = { version = "0.7.1", features = ["experimental"] }
 futures = "0.3.26"
 hex = { version = "0.4.3", features = ["serde"] }
 pairing = "0.22.0"
 reqwest = { version = "0.11.14", features = [ "json" ] }
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.93"
-sha2 = "0.9.1"
-tokio = { version = "1.25.0", features = ["full"] }
+serde_json = "1.0.94"
+sha2 = "0.9.9"
+tokio = { version = "1.26.0", features = ["full"] }
 
 [dev-dependencies]
 hex-literal = "0.3.4"
-mockito = "0.32.3"
+mockito = "0.32.4"
 

@@ -32,7 +32,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Retrieve public randomness
-    Get {
+    Rand {
         /// Set default upstream. If empty, use the lastest upstream
         #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         set_upstream: Option<String>,
@@ -86,14 +86,14 @@ async fn main() {
         .init();
 
     let output = match cli.command {
-        Commands::Get {
+        Commands::Rand {
             set_upstream,
             verify,
             format,
             beacon,
         } => {
             let chain = cfg.set_upstream_and_chain(set_upstream).unwrap();
-            cmd::get(&cfg, format, chain, beacon, verify).await
+            cmd::rand(&cfg, format, chain, beacon, verify).await
         }
         Commands::Chain { command } => match command {
             Some(command) => match command {
