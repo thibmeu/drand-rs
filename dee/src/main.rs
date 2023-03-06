@@ -31,6 +31,41 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Interact with timelock encryption
+    ///
+    /// INPUT defaults to standard input (not supported for decryption), and OUTPUT defaults to standard output.
+    ///
+    /// ROUND can be:
+    /// - A specific round. e.g. 123
+    /// - A duration. e.g. 90s (not supported)
+    /// - An RFC3339 date. e.g. 2023-06-28 21:30:22+00:00 (not supported)
+    ///
+    /// PATH is a path to a file containing age recipients, one per line
+    /// (ignoring "#" prefixed comments and empty lines).
+    Crypt {
+        /// Encrypt the input (the default)
+        #[arg(short, long, default_value_t = true, group = "action")]
+        // todo(thibault): add group for armor
+        encrypt: bool,
+        /// Decrypt the input
+        #[arg(short, long, group = "action")]
+        decrypt: bool,
+        /// Set default upstream. If empty, use the lastest upstream
+        #[arg(short = 'u', long, value_hint = ValueHint::Url)]
+        set_upstream: Option<String>,
+        /// Encrypt to the specified ROUND
+        #[arg(short, long)]
+        round: Option<u64>, // todo: support time
+        /// Encrypt to a PEM encoded format
+        #[arg(short, long)]
+        armor: bool,
+        /// Write the result to the file at path OUTPUT
+        #[arg(short, long)]
+        output: Option<String>,
+        #[arg(required = true)]
+        /// Path to a file to read from
+        input: Option<String>,
+    },
     /// Retrieve public randomness
     Rand {
         /// Set default upstream. If empty, use the lastest upstream
@@ -45,8 +80,8 @@ enum Commands {
         /// Round number to retrieve. Leave empty to retrieve the latest round
         beacon: Option<u64>,
     },
-    /// Manage set of beacon chains
-    Chain {
+    /// Manage set of remote beacon chains
+    Remote {
         #[command(subcommand)]
         command: Option<ChainCommand>,
     },
@@ -95,7 +130,23 @@ async fn main() {
             let chain = cfg.set_upstream_and_chain(set_upstream).unwrap();
             cmd::rand(&cfg, format, chain, beacon, verify).await
         }
-        Commands::Chain { command } => match command {
+        Commands::Crypt {
+            encrypt: _,
+            decrypt,
+            set_upstream,
+            round,
+            armor,
+            output,
+            input,
+        } => {
+            let chain = cfg.set_upstream_and_chain(set_upstream).unwrap();
+            if decrypt {
+                cmd::crypt::decrypt(&cfg, output, input, chain).await
+            } else {
+                cmd::crypt::encrypt(&cfg, output, input, armor, chain, round.unwrap()).await
+            }
+        }
+        Commands::Remote { command } => match command {
             Some(command) => match command {
                 ChainCommand::Add { name, url } => cmd::chain::add(&mut cfg, name, url).await,
                 ChainCommand::Remove { name } => cmd::chain::remove(&mut cfg, name),

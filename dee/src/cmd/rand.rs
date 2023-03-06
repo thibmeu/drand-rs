@@ -3,7 +3,7 @@ use anyhow::Result;
 use colored::Colorize;
 use drand_core::{
     beacon::RandomnessBeacon,
-    chain::{self, ChainClient, ChainOptions, ChainVerification},
+    chain::{self, ChainClient, ChainOptions},
     http_chain_client::HttpChainClient,
 };
 
@@ -44,14 +44,7 @@ pub async fn rand(
 
     let client = HttpChainClient::new(
         chain,
-        Some(ChainOptions::new(
-            verify,
-            true,
-            Some(ChainVerification::new(
-                Some(info.hash()),
-                Some(info.public_key()),
-            )),
-        )),
+        Some(ChainOptions::new(verify, true, Some(info.into()))),
     );
 
     let beacon = match beacon {

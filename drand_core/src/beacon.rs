@@ -94,7 +94,12 @@ pub struct ChainedBeacon {
 }
 
 impl ChainedBeacon {
-    pub fn new(round: u64, randomness: Vec<u8>, signature: Vec<u8>, previous_signature: Vec<u8>) -> RandomnessBeacon {
+    pub fn new(
+        round: u64,
+        randomness: Vec<u8>,
+        signature: Vec<u8>,
+        previous_signature: Vec<u8>,
+    ) -> RandomnessBeacon {
         RandomnessBeacon::ChainedBeacon(Self {
             round,
             randomness,

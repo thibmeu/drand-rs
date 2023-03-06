@@ -22,12 +22,15 @@ cargo install dee
 ## Usage
 
 ```bash
-dee chain add mainnet https://api.drand.sh # Add a new beacon
-dee get --set-upstream mainnet 1000 # Fetch round 1000 and set upstream to mainnet
-dee get --format json # Fetch latest mainnet round as json
+dee remote add mainnet https://api.drand.sh # Add a new beacon
+dee rand --set-upstream mainnet 1000 # Fetch round 1000 and set upstream to mainnet
+dee rand --format json # Fetch latest mainnet round as json
 
-dee chain add testnet https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c # Add a new beacon
-dee chain info testnet # Retrieve information about testnet beacon
+dee remote add tlock https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c # Add a new beacon
+dee remote info tlock # Retrieve information about testnet beacon
+
+dee crypt --round 1000 --armor -o encrypted.pem test.txt # encrypt test.txt with timelock encryption
+dee crypt --decrypt -o decrypted.txt encrypted.pem # decrypt encrypted.txt witg timelock encryption
 ```
 
 ## Seeding your Random Number Generator

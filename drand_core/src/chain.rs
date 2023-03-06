@@ -179,6 +179,12 @@ impl Default for ChainVerification {
     }
 }
 
+impl From<ChainInfo> for ChainVerification {
+    fn from(info: ChainInfo) -> Self {
+        Self::new(Some(info.hash()), Some(info.public_key()))
+    }
+}
+
 #[async_trait]
 /// Drand client, that can retrieve and validate information from a given chain.
 pub trait ChainClient {
