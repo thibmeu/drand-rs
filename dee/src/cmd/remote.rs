@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use chrono::{TimeZone, Utc};
 use colored::Colorize;
-use drand_core::chain::{Chain, ChainInfo};
+use drand_core::chain::Chain;
 use log::{log_enabled, Level};
 
 use crate::{
@@ -10,6 +10,9 @@ use crate::{
 };
 
 pub async fn add(cfg: &mut config::Local, name: String, url: String) -> Result<String> {
+    if cfg.chain(&name).is_some() {
+        return Err(anyhow!("remote {name} already exists."));
+    }
     let chain = Chain::new(&url);
     let info = chain.info().await?;
 
@@ -19,47 +22,63 @@ pub async fn add(cfg: &mut config::Local, name: String, url: String) -> Result<S
 }
 
 pub fn remove(cfg: &mut config::Local, name: String) -> Result<String> {
+    if cfg.chain(&name).is_none() {
+        return Err(anyhow!("no such remote '{name}'."));
+    }
     cfg.remove_chain(name.clone())?;
 
     Ok(name)
 }
 
 pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<String> {
+    if cfg.chain(&old).is_none() {
+        return Err(anyhow!("no such remote '{old}'."));
+    }
+    if cfg.chain(&new).is_some() {
+        return Err(anyhow!("remote {new} already exists."));
+    }
     cfg.rename_chain(old, new.clone())?;
 
     Ok(new)
 }
 
 pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<String> {
+    if cfg.chain(&name).is_none() {
+        return Err(anyhow!("no such remote '{name}'."));
+    }
     cfg.set_url_chain(name.clone(), url)?;
 
     Ok(name)
 }
 
-impl print::Print for ChainInfo {
+impl print::Print for ConfigChain {
     fn pretty(&self) -> Result<String> {
+        let info = self.info();
         Ok(format!(
             r"{: <10}: {}
+{: <10}: {}
 {: <10}: {}s
 {: <10}: {}
 {: <10}: {}
 {: <10}: {}
 {: <10}: {}
 {: <10}: {}",
+            "URL".bold(),
+            self.url(),
             "Public Key".bold(),
-            hex::encode(self.public_key()),
+            hex::encode(info.public_key()),
             "Period".bold(),
-            self.period(),
+            info.period(),
             "Genesis".bold(),
-            Utc.timestamp_opt(self.genesis_time() as i64, 0).unwrap(),
+            Utc.timestamp_opt(info.genesis_time() as i64, 0).unwrap(),
             "Chain Hash".bold(),
-            hex::encode(self.hash()),
+            hex::encode(info.hash()),
             "Group Hash".bold(),
-            hex::encode(self.group_hash()),
+            hex::encode(info.group_hash()),
             "Scheme ID".bold(),
-            self.scheme_id(),
+            info.scheme_id(),
             "Beacon ID".bold(),
-            self.metadata().beacon_id()
+            info.metadata().beacon_id()
         ))
     }
 
@@ -71,16 +90,16 @@ impl print::Print for ChainInfo {
 pub fn info(cfg: &config::Local, format: print::Format, name: String) -> Result<String> {
     let chain = match cfg.chain(&name) {
         Some(chain) => chain,
-        None => return Err(anyhow!("Chain does not exist")),
+        None => return Err(anyhow!("no such remote '{name}'.")),
     };
 
-    print_with_format(chain.info(), format)
+    print_with_format(chain, format)
 }
 
 pub fn list(cfg: &config::Local) -> Result<String> {
     let chains: Vec<String> = cfg.chains().keys().cloned().collect();
     if chains.is_empty() {
-        Ok("No chain".to_string())
+        Ok("".into())
     } else {
         let output: Vec<String> = chains
             .iter()

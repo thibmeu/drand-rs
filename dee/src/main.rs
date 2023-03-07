@@ -86,14 +86,14 @@ enum Commands {
     /// Manage set of remote beacon chains
     Remote {
         #[command(subcommand)]
-        command: Option<ChainCommand>,
+        command: Option<RemoteCommand>,
     },
     /// Prints path to configuration file
     Config {},
 }
 
 #[derive(Subcommand)]
-enum ChainCommand {
+enum RemoteCommand {
     /// Add remote chain
     Add { name: String, url: String },
     /// Remove remote chain
@@ -152,11 +152,11 @@ async fn main() {
         }
         Commands::Remote { command } => match command {
             Some(command) => match command {
-                ChainCommand::Add { name, url } => cmd::chain::add(&mut cfg, name, url).await,
-                ChainCommand::Remove { name } => cmd::chain::remove(&mut cfg, name),
-                ChainCommand::Rename { old, new } => cmd::chain::rename(&mut cfg, old, new),
-                ChainCommand::SetUrl { name, url } => cmd::chain::set_url(&mut cfg, name, url),
-                ChainCommand::Info { format, name } => cmd::chain::info(
+                RemoteCommand::Add { name, url } => cmd::remote::add(&mut cfg, name, url).await,
+                RemoteCommand::Remove { name } => cmd::remote::remove(&mut cfg, name),
+                RemoteCommand::Rename { old, new } => cmd::remote::rename(&mut cfg, old, new),
+                RemoteCommand::SetUrl { name, url } => cmd::remote::set_url(&mut cfg, name, url),
+                RemoteCommand::Info { format, name } => cmd::remote::info(
                     &cfg,
                     format,
                     name.or(cfg.upstream())
@@ -164,7 +164,7 @@ async fn main() {
                         .unwrap(),
                 ),
             },
-            None => cmd::chain::list(&cfg),
+            None => cmd::remote::list(&cfg),
         },
         Commands::Config {} => cmd::config(),
     };
@@ -175,7 +175,7 @@ async fn main() {
             println!("{result}")
         }
         Err(err) => {
-            eprintln!("{err}");
+            eprintln!("error: {err}");
             process::exit(1)
         }
     }
