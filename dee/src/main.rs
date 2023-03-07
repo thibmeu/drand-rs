@@ -148,8 +148,10 @@ async fn main() {
             format,
             beacon,
         } => {
-            let chain = cfg.set_upstream_and_chain(set_upstream).unwrap();
-            cmd::rand(&cfg, format, chain, beacon, verify).await
+            match cfg.set_upstream_and_chain(set_upstream) {
+                Ok(chain) => cmd::rand(&cfg, format, chain, beacon, verify).await,
+                Err(err) => Err(err),
+            }
         }
         Commands::Crypt {
             encrypt: _,
@@ -160,12 +162,16 @@ async fn main() {
             output,
             input,
         } => {
-            let chain = cfg.set_upstream_and_chain(set_upstream).unwrap();
-            if decrypt {
-                cmd::crypt::decrypt(&cfg, output, input, chain).await
-            } else {
-                cmd::crypt::encrypt(&cfg, output, input, armor, chain, round).await
-            }
+            match cfg.set_upstream_and_chain(set_upstream) {
+                Ok(chain) => {
+                    if decrypt {
+                        cmd::crypt::decrypt(&cfg, output, input, chain).await
+                    } else {
+                        cmd::crypt::encrypt(&cfg, output, input, armor, chain, round).await
+                    }
+                },
+                Err(err) => Err(err),
+            }   
         }
         Commands::Remote { command } => match command {
             Some(command) => match command {

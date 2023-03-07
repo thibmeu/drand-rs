@@ -62,7 +62,7 @@ impl Local {
             self.chains.insert(new, v);
             Ok(())
         } else {
-            Err(anyhow!("Chain does not exist"))
+            Err(anyhow!("no such remote '{old}'."))
         }
     }
 
@@ -71,7 +71,7 @@ impl Local {
             v.url = url;
             Ok(())
         } else {
-            Err(anyhow!("Chain does not exist"))
+            Err(anyhow!("no such remote '{name}'."))
         }
     }
 
@@ -80,7 +80,7 @@ impl Local {
             self.upstream = Some(upstream.to_owned());
             Ok(())
         } else {
-            Err(anyhow!("Chain does not exist"))
+            Err(anyhow!("no such remote '{upstream}'."))
         }
     }
 
