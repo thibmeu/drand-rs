@@ -715,7 +715,7 @@ checksum = "eaa37046cc0f6c3cc6090fbdbf73ef0b8ef4cfcc37f6befc0020f63e8cf121e1"
 
 [[package]]
 name = "dee"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "anyhow",
  "chrono",
@@ -723,7 +723,7 @@ dependencies = [
  "clap-verbosity-flag",
  "colored",
  "confy",
- "drand_core",
+ "drand_core 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger",
  "hex",
  "log",
@@ -796,6 +796,25 @@ dependencies = [
  "hex",
  "hex-literal",
  "mockito",
+ "pairing",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2 0.9.9",
+ "tokio",
+]
+
+[[package]]
+name = "drand_core"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9f9d111848eabfc5961292b2de0b33a42a1c0bcecf2a32eba2554dbfd0fb864"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bls12_381",
+ "futures",
+ "hex",
  "pairing",
  "reqwest",
  "serde",
