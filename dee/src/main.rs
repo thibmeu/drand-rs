@@ -34,78 +34,95 @@ enum Commands {
     /// INPUT defaults to standard input (not supported for decryption), and OUTPUT defaults to standard output.
     ///
     /// ROUND can be:
-    /// - A specific round. e.g. 123
-    /// - A duration. e.g. 30s (not supported)
-    /// - An RFC3339 date. e.g. 2023-06-28 21:30:22+00:00 (not supported)
+    /// * a specific round (123),
+    /// * a duration (30s),
+    /// * an RFC3339 date (2023-06-28 21:30:22)
     ///
-    /// PATH is a path to a file containing age recipients, one per line
-    /// (ignoring "#" prefixed comments and empty lines).
+    /// UPSTREAM is an existing remote, and defaults to the lastest used.
+    /// 
+    /// Example:
+    ///     $ tar cvz ~/data | dee crypt -u myremote -r 30s > data.tar.gz.age
+    ///     $ dee crypt --decrypt -o data.tar.gz data.tar.gz.age
+    #[command(verbatim_doc_comment)]
     Crypt {
-        /// Encrypt the input (the default)
+        /// Encrypt the input (the default).
         #[arg(short, long, default_value_t = true, group = "action")]
         // todo(thibault): add group for armor
         encrypt: bool,
-        /// Decrypt the input
+        /// Decrypt the input.
         #[arg(short, long, group = "action")]
         decrypt: bool,
-        /// Set default upstream. If empty, use the lastest upstream
+        /// Set default upstream. If empty, use the latest upstream.
         #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         set_upstream: Option<String>,
-        /// Encrypt to the specified ROUND
-        ///
+        /// Encrypt to the specified ROUND.
         /// ROUND can be:
-        /// a specific round (123),
-        /// a duration (30s),
-        /// an RFC3339 date (2023-06-28 21:30:22)
-        #[arg(short, long)]
+        /// * a specific round. e.g. 123,
+        /// * a duration. e.g. 30s,
+        /// * an RFC3339 date. e.g. 2023-06-28 21:30:22
+        #[arg(short, long, verbatim_doc_comment)]
         round: Option<String>,
-        /// Encrypt to a PEM encoded format
+        /// Encrypt to a PEM encoded format.
         #[arg(short, long)]
         armor: bool,
-        /// Write the result to the file at path OUTPUT
+        /// Write the result to the file at path OUTPUT.
         #[arg(short, long)]
         output: Option<String>,
-        #[arg(required = true)]
-        /// Path to a file to read from
+        /// Path to a file to read from.
         input: Option<String>,
     },
-    /// Retrieve public randomness
+    /// Retrieve public randomness.
+    /// 
+    /// BEACON defaults to the latest beacon, and FORMAT to pretty.
+    /// 
+    /// UPSTREAM is an existing remote, and defaults to the lastest used.
+    /// 
+    /// Example:
+    ///     $ dee rand -u myremote 1000
+    ///     $ dee rand
+    #[command(verbatim_doc_comment)]
     Rand {
-        /// Set default upstream. If empty, use the lastest upstream
+        /// Set default upstream. If empty, use the lastest upstream.
         #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         set_upstream: Option<String>,
-        /// Enable beacon response validation
+        /// Enable beacon response validation.
         #[arg(long, default_value_t = true)]
         verify: bool,
         /// Output format
-        #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
+        #[arg(short, long, value_enum, default_value_t = print::Format::Pretty)]
         format: print::Format,
-        /// Round number to retrieve. Leave empty to retrieve the latest round
+        /// Round number to retrieve. Leave empty to retrieve the latest round.
         beacon: Option<u64>,
     },
-    /// Manage set of remote beacon chains
+    /// Manage set of chains ("remote") whose beacons you track.
+    /// 
+    ///  With no arguments, shows a list of existing remotes. Several subcommands are available to perform operations on the remotes.
+    /// 
+    /// With the -v option, remote URLs are shown as well.
     Remote {
         #[command(subcommand)]
         command: Option<RemoteCommand>,
     },
-    /// Prints path to configuration file
+    /// Print path to configuration file.
     Config {},
 }
 
 #[derive(Subcommand)]
 enum RemoteCommand {
-    /// Add remote chain
+    /// Add a remote named <name> for the chain at <URL>. The command dee rand -u <name> can then be used to create and update remote-tracking chain <name>.
+    ///
+    /// By default, only information on managed chains are imported.
     Add { name: String, url: String },
-    /// Remove remote chain
-    Remove { name: String },
-    /// Rename remote chain
+    /// Rename the remote named <old> to <new>. The remote-tracking chain and configuration settings for the remote are updated.
     Rename { old: String, new: String },
-    /// Set URL for remote chain
+    /// Remove the remote named <name>. The remote-tracking chain and configuration settings for the remote are removed.
+    Remove { name: String },
+    /// Changes URLs for the remote.
     SetUrl { name: String, url: String },
-    /// Retrieve and store info about remote chain
-    Info {
+    /// Gives some information about the remote <name>.
+    Show {
         /// Output format
-        #[arg(long, value_enum, default_value_t = print::Format::Pretty)]
+        #[arg(short, long, value_enum, default_value_t = print::Format::Pretty)]
         format: print::Format,
         name: Option<String>,
     },
@@ -156,7 +173,7 @@ async fn main() {
                 RemoteCommand::Remove { name } => cmd::remote::remove(&mut cfg, name),
                 RemoteCommand::Rename { old, new } => cmd::remote::rename(&mut cfg, old, new),
                 RemoteCommand::SetUrl { name, url } => cmd::remote::set_url(&mut cfg, name, url),
-                RemoteCommand::Info { format, name } => cmd::remote::info(
+                RemoteCommand::Show { format, name } => cmd::remote::show(
                     &cfg,
                     format,
                     name.or(cfg.upstream())

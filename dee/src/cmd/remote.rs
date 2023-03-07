@@ -37,7 +37,14 @@ pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<Strin
     if cfg.chain(&new).is_some() {
         return Err(anyhow!("remote {new} already exists."));
     }
-    cfg.rename_chain(old, new.clone())?;
+
+    cfg.rename_chain(old.clone(), new.clone())?;
+
+    if let Some(upstream) = cfg.upstream() {
+        if  upstream == old {
+            cfg.set_upstream(&new)?;
+        }
+    }
 
     Ok(new)
 }
@@ -87,7 +94,7 @@ impl print::Print for ConfigChain {
     }
 }
 
-pub fn info(cfg: &config::Local, format: print::Format, name: String) -> Result<String> {
+pub fn show(cfg: &config::Local, format: print::Format, name: String) -> Result<String> {
     let chain = match cfg.chain(&name) {
         Some(chain) => chain,
         None => return Err(anyhow!("no such remote '{name}'.")),
