@@ -94,9 +94,9 @@ enum Commands {
         /// Round number to retrieve. Leave empty to retrieve the latest round.
         beacon: Option<u64>,
     },
-    /// Manage set of chains ("remote") whose beacons you track.
+    /// Manage set of tracked chains.
     /// 
-    ///  With no arguments, shows a list of existing remotes. Several subcommands are available to perform operations on the remotes.
+    /// With no arguments, shows a list of existing remotes. Several subcommands are available to perform operations on the remotes.
     /// 
     /// With the -v option, remote URLs are shown as well.
     Remote {
