@@ -1,7 +1,7 @@
 [package]
 name = "drand_core"
 description = "[ALPHA] A drand client library."
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Thibault Meunier <crates@thibault.uk>"]
 edition = "2021"
 readme = "./README.md"
@@ -17,7 +17,6 @@ license = "MIT"
 anyhow = "1.0.69"
 async-trait = "0.1.66"
 bls12_381 = { version = "0.7.1", features = ["experimental"] }
-futures = "0.3.26"
 hex = { version = "0.4.3", features = ["serde"] }
 pairing = "0.22.0"
 reqwest = { version = "0.11.14", features = [ "json" ] }
