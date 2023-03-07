@@ -37,7 +37,7 @@ enum Commands {
     ///
     /// ROUND can be:
     /// - A specific round. e.g. 123
-    /// - A duration. e.g. 90s (not supported)
+    /// - A duration. e.g. 30s (not supported)
     /// - An RFC3339 date. e.g. 2023-06-28 21:30:22+00:00 (not supported)
     ///
     /// PATH is a path to a file containing age recipients, one per line
@@ -55,7 +55,7 @@ enum Commands {
         set_upstream: Option<String>,
         /// Encrypt to the specified ROUND
         #[arg(short, long)]
-        round: Option<u64>, // todo: support time
+        round: Option<String>,
         /// Encrypt to a PEM encoded format
         #[arg(short, long)]
         armor: bool,
@@ -143,7 +143,7 @@ async fn main() {
             if decrypt {
                 cmd::crypt::decrypt(&cfg, output, input, chain).await
             } else {
-                cmd::crypt::encrypt(&cfg, output, input, armor, chain, round.unwrap()).await
+                cmd::crypt::encrypt(&cfg, output, input, armor, chain, round).await
             }
         }
         Commands::Remote { command } => match command {

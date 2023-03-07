@@ -38,16 +38,23 @@ pub async fn encrypt(
     input: Option<String>,
     armor: bool,
     chain: ConfigChain,
-    round: u64,
+    round: Option<String>,
 ) -> Result<String> {
-    let chain = chain::Chain::new(&chain.url());
-    let info = chain.info().await?;
+    let info = chain.info();
+    let beacon_time = crate::cmd::time::round_from_option(chain, round).await?;
 
     let src = file_or_stdin(input);
     let dst = file_or_stdout(output);
 
-    tlock_age::encrypt(dst, src, armor, &info.hash(), &info.public_key(), round)
-        .map(|()| String::from(""))
+    tlock_age::encrypt(
+        dst,
+        src,
+        armor,
+        &info.hash(),
+        &info.public_key(),
+        beacon_time.round(),
+    )
+    .map(|()| String::from(""))
 }
 
 pub async fn decrypt(
@@ -60,8 +67,8 @@ pub async fn decrypt(
     let src = file_or_stdin(input.clone());
     let header = tlock_age::decrypt_header(src)?;
 
+    let info = chain.info();
     let chain = chain::Chain::new(&chain.url());
-    let info = chain.info().await?;
 
     let client = HttpChainClient::new(
         chain,
