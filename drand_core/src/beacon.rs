@@ -58,6 +58,14 @@ impl RandomnessBeacon {
         .to_string()
     }
 
+    pub fn is_signature_on_g1(&self) -> bool {
+        self.scheme_id().contains("on-g1")
+    }
+
+    pub fn is_unchained(&self) -> bool {
+        self.scheme_id().contains("unchained")
+    }
+
     pub fn signature(&self) -> Vec<u8> {
         match self {
             Self::ChainedBeacon(chained) => chained.signature.clone(),
