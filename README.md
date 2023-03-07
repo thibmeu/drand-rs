@@ -30,6 +30,8 @@ dee remote add tlock https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a
 dee remote info tlock # Retrieve information about testnet beacon
 
 dee crypt --round 1000 --armor -o encrypted.pem test.txt # encrypt test.txt with timelock encryption
+dee crypt --round 30s --armor -o encrypted.pem test.txt # encrypt test.txt for the round in 30s
+dee crypt --round "2023-06-28 01:23:45" test.txt # encrypt test.txt for the round at a specific date and print on stdout
 dee crypt --decrypt -o decrypted.txt encrypted.pem # decrypt encrypted.txt witg timelock encryption
 ```
 
