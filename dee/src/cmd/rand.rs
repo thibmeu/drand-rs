@@ -6,24 +6,49 @@ use drand_core::{
     chain::{self, ChainClient, ChainOptions},
     http_chain_client::HttpChainClient,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{self, ConfigChain},
-    print::{print_with_format, Format, Print},
+    print::{print_with_format, Format, Print}, time::RandomnessBeaconTime,
 };
 
-impl Print for RandomnessBeacon {
+#[derive(Serialize, Deserialize)]
+struct RandResult {
+    beacon: RandomnessBeacon,
+    time: RandomnessBeaconTime,
+}
+
+impl Print for RandResult {
     fn pretty(&self) -> Result<String> {
+        let relative = self.time.relative();
+        let seconds = relative.num_seconds().abs() % 60;
+        let minutes = (relative.num_minutes()).abs() % 60;
+        let hours = relative.num_hours().abs();
+        let epoch = if relative.num_seconds() == 0 {
+            "now"
+        } else if relative.num_seconds() < 0 {
+            "ago"
+        } else {
+            "from now"
+        };
+        let relative = format!("{hours:0<2}:{minutes:0<2}:{seconds:0<2} {epoch}");
         Ok(format!(
             r"{: <10}: {}
 {: <10}: {}
+{: <10}: {}
+{: <10}: {}
 {: <10}: {}",
             "Round".bold(),
-            self.round(),
+            self.time.round(),
+            "Relative".bold(),
+            relative,
+            "Absolute".bold(),
+            self.time.absolute(),
             "Randomness".bold(),
-            hex::encode(self.randomness()),
+            hex::encode(self.beacon.randomness()),
             "Signature".bold(),
-            hex::encode(self.signature()),
+            hex::encode(self.beacon.signature()),
         ))
     }
 
@@ -44,7 +69,7 @@ pub async fn rand(
 
     let client = HttpChainClient::new(
         chain,
-        Some(ChainOptions::new(verify, true, Some(info.into()))),
+        Some(ChainOptions::new(verify, true, Some(info.clone().into()))),
     );
 
     let beacon = match beacon {
@@ -52,5 +77,7 @@ pub async fn rand(
         None => client.latest().await?,
     };
 
-    print_with_format(beacon, format)
+    let time = RandomnessBeaconTime::from_round(&info, beacon.round());
+
+    print_with_format(RandResult{beacon, time}, format)
 }

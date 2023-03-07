@@ -49,13 +49,11 @@ mod duration_format {
     use chrono::Duration;
     use serde::{self, Deserialize, Deserializer, Serializer};
 
-    const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
-
     pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let s = format!("{}s", duration.num_seconds());
+        let s = format!("{}", duration.num_seconds());
         serializer.serialize_str(&s)
     }
 
@@ -103,11 +101,10 @@ impl RandomnessBeaconTime {
         self.absolute
     }
 
-    fn from_round(info: &ChainInfo, round: u64) -> Self {
+    pub fn from_round(info: &ChainInfo, round: u64) -> Self {
         let genesis =
             chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
-
-        let absolute = genesis + chrono::Duration::seconds((round + info.period()) as i64);
+        let absolute = genesis + chrono::Duration::seconds((round * info.period()) as i64);
         let relative = absolute - chrono::Utc::now().naive_utc();
         Self {
             round,
@@ -190,25 +187,4 @@ pub async fn round_from_option(
     Ok(RandomnessBeaconTime::new(&info, &round))
 }
 
-pub async fn time(
-    _cfg: &config::Local,
-    format: Format,
-    chain: ConfigChain,
-    round: Option<String>,
-) -> Result<String> {
-    let info = chain.info();
-    let chain = chain::Chain::new(&chain.url());
 
-    let client = HttpChainClient::new(
-        chain,
-        Some(ChainOptions::new(true, true, Some(info.clone().into()))),
-    );
-
-    let round = match round {
-        Some(round) => round,
-        None => client.latest().await?.round().to_string(),
-    };
-    let beacon_time = RandomnessBeaconTime::new(&info, &round);
-
-    print_with_format(beacon_time, format)
-}

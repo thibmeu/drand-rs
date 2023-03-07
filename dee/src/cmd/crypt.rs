@@ -6,7 +6,7 @@ use drand_core::{
     http_chain_client::HttpChainClient,
 };
 
-use crate::config::{self, ConfigChain};
+use crate::{config::{self, ConfigChain}, time::RandomnessBeaconTime};
 
 pub fn file_or_stdin(input: Option<String>) -> Box<dyn io::Read> {
     let reader: Box<dyn io::Read> = match input {
@@ -41,7 +41,15 @@ pub async fn encrypt(
     round: Option<String>,
 ) -> Result<String> {
     let info = chain.info();
-    let beacon_time = crate::cmd::time::round_from_option(chain, round).await?;
+
+    if info.is_signature_on_g1() {
+        return Err(anyhow!("remote must have signatures on G2"))
+    }
+    if !info.is_unchained() {
+        return Err(anyhow!("remote must use unchained signatures"))
+    }
+
+    let beacon_time = crate::time::round_from_option(chain, round).await?;
 
     let src = file_or_stdin(input);
     let dst = file_or_stdout(output);
@@ -74,12 +82,22 @@ pub async fn decrypt(
         chain,
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
     );
+
+    let time = RandomnessBeaconTime::from_round(&info, header.round());
+
     let beacon = match client.get(header.round()).await {
         Ok(beacon) => beacon,
         Err(_) => {
+            let relative = time.relative();
+            let seconds = relative.num_seconds().abs() % 60;
+            let minutes = (relative.num_minutes()).abs() % 60;
+            let hours = relative.num_hours().abs();
+            let relative = format!("{hours:0<2}:{minutes:0<2}:{seconds:0<2}");
             return Err(anyhow!(
-                "Too early. Decryption round is {}.",
-                header.round()
+                "Too early. Decryption round is {}, estimated in {} ({}).",
+                time.round(),
+                relative,
+                time.absolute(),
             ))
         }
     };

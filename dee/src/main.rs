@@ -16,8 +16,6 @@ use clap::{Parser, Subcommand, ValueHint};
 /// drand chain # list all chains
 /// drand chain info cloudflare
 /// drand chain info --cache=false cloudflare # chain is cached locally for validation
-/// 4. Active drand node
-/// drand watch cloudflare
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -54,6 +52,11 @@ enum Commands {
         #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         set_upstream: Option<String>,
         /// Encrypt to the specified ROUND
+        /// 
+        /// ROUND can be:
+        /// a specific round (123),
+        /// a duration (30s),
+        /// an RFC3339 date (2023-06-28 21:30:22)
         #[arg(short, long)]
         round: Option<String>,
         /// Encrypt to a PEM encoded format
@@ -111,6 +114,7 @@ enum ChainCommand {
 mod cmd;
 mod config;
 mod print;
+mod time;
 
 #[tokio::main]
 async fn main() {
