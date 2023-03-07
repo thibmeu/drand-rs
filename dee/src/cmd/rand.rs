@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use anyhow::Result;
 
 use colored::Colorize;
@@ -10,7 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     config::{self, ConfigChain},
-    print::{print_with_format, Format, Print}, time::RandomnessBeaconTime,
+    print::{print_with_format, Format, Print},
+    time::RandomnessBeaconTime,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -25,12 +28,10 @@ impl Print for RandResult {
         let seconds = relative.num_seconds().abs() % 60;
         let minutes = (relative.num_minutes()).abs() % 60;
         let hours = relative.num_hours().abs();
-        let epoch = if relative.num_seconds() == 0 {
-            "now"
-        } else if relative.num_seconds() < 0 {
-            "ago"
-        } else {
-            "from now"
+        let epoch = match relative.num_seconds().cmp(&0) {
+            Ordering::Less => "ago",
+            Ordering::Equal => "now",
+            Ordering::Greater => "from now",
         };
         let relative = format!("{hours:0<2}:{minutes:0<2}:{seconds:0<2} {epoch}");
         Ok(format!(
@@ -79,5 +80,5 @@ pub async fn rand(
 
     let time = RandomnessBeaconTime::from_round(&info, beacon.round());
 
-    print_with_format(RandResult{beacon, time}, format)
+    print_with_format(RandResult { beacon, time }, format)
 }

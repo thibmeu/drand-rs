@@ -755,7 +755,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bls12_381",
- "futures",
  "hex",
  "hex-literal",
  "mockito",

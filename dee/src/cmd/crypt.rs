@@ -6,7 +6,10 @@ use drand_core::{
     http_chain_client::HttpChainClient,
 };
 
-use crate::{config::{self, ConfigChain}, time::RandomnessBeaconTime};
+use crate::{
+    config::{self, ConfigChain},
+    time::RandomnessBeaconTime,
+};
 
 pub fn file_or_stdin(input: Option<String>) -> Box<dyn io::Read> {
     let reader: Box<dyn io::Read> = match input {
@@ -43,10 +46,10 @@ pub async fn encrypt(
     let info = chain.info();
 
     if info.is_signature_on_g1() {
-        return Err(anyhow!("remote must have signatures on G2"))
+        return Err(anyhow!("remote must have signatures on G2"));
     }
     if !info.is_unchained() {
-        return Err(anyhow!("remote must use unchained signatures"))
+        return Err(anyhow!("remote must use unchained signatures"));
     }
 
     let beacon_time = crate::time::round_from_option(chain, round).await?;
@@ -98,7 +101,7 @@ pub async fn decrypt(
                 time.round(),
                 relative,
                 time.absolute(),
-            ))
+            ));
         }
     };
 

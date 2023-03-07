@@ -5,8 +5,8 @@ use drand_core::chain::{self, ChainClient, ChainInfo, ChainOptions};
 use drand_core::http_chain_client::HttpChainClient;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{self, ConfigChain};
-use crate::print::{print_with_format, Format, Print};
+use crate::config::ConfigChain;
+use crate::print::Print;
 
 fn parse_duration(duration: &str) -> Result<chrono::Duration> {
     let l = duration.len() - 1;
@@ -186,5 +186,3 @@ pub async fn round_from_option(
 
     Ok(RandomnessBeaconTime::new(&info, &round))
 }
-
-

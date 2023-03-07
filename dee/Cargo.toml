@@ -21,7 +21,7 @@ clap = { version = "4.1.8", features = ["derive"] }
 clap-verbosity-flag = "2.0.0"
 colored = "2.0.0"
 confy = "0.5.1"
-drand_core = "0.0.3"
+drand_core = { path = "../drand_core" }
 env_logger = "0.10.0"
 hex = "0.4.3"
 log = "0.4.17"

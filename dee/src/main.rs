@@ -52,7 +52,7 @@ enum Commands {
         #[arg(short = 'u', long, value_hint = ValueHint::Url)]
         set_upstream: Option<String>,
         /// Encrypt to the specified ROUND
-        /// 
+        ///
         /// ROUND can be:
         /// a specific round (123),
         /// a duration (30s),

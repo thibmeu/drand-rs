@@ -83,6 +83,18 @@ impl Message for RandomnessBeacon {
     }
 }
 
+impl From<ChainedBeacon> for RandomnessBeacon {
+    fn from(b: ChainedBeacon) -> Self {
+        Self::ChainedBeacon(b)
+    }
+}
+
+impl From<UnchainedBeacon> for RandomnessBeacon {
+    fn from(b: UnchainedBeacon) -> Self {
+        Self::UnchainedBeacon(b)
+    }
+}
+
 /// Package item to be validated against a BLS signature given a public key.
 trait Message {
     fn message(&self) -> Result<Vec<u8>>;
@@ -107,13 +119,13 @@ impl ChainedBeacon {
         randomness: Vec<u8>,
         signature: Vec<u8>,
         previous_signature: Vec<u8>,
-    ) -> RandomnessBeacon {
-        RandomnessBeacon::ChainedBeacon(Self {
+    ) -> Self {
+        Self {
             round,
             randomness,
             signature,
             previous_signature,
-        })
+        }
     }
 }
 
@@ -143,12 +155,12 @@ pub struct UnchainedBeacon {
 }
 
 impl UnchainedBeacon {
-    pub fn new(round: u64, randomness: Vec<u8>, signature: Vec<u8>) -> RandomnessBeacon {
-        RandomnessBeacon::UnchainedBeacon(Self {
+    pub fn new(round: u64, randomness: Vec<u8>, signature: Vec<u8>) -> Self {
+        Self {
             round,
             randomness,
             signature,
-        })
+        }
     }
 }
 
