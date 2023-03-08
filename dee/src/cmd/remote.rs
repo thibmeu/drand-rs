@@ -59,6 +59,10 @@ pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<Str
 }
 
 impl print::Print for ConfigChain {
+    fn short(&self) -> Result<String> {
+        Ok(hex::encode(self.info().public_key()))
+    }
+
     fn long(&self) -> Result<String> {
         let info = self.info();
         Ok(format!(
@@ -90,7 +94,7 @@ impl print::Print for ConfigChain {
     }
 
     fn json(&self) -> Result<String> {
-        serde_json::to_string(&self).map_err(|e| anyhow!(e))
+        serde_json::to_string(&self.info()).map_err(|e| anyhow!(e))
     }
 }
 

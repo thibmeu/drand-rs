@@ -79,7 +79,7 @@ enum Commands {
     ///
     /// Example:
     ///     $ dee rand -u myremote 1000
-    ///     $ dee rand
+    ///     $ dee rand -f long
     #[command(verbatim_doc_comment)]
     Rand {
         /// Set default upstream. If empty, use the lastest upstream.
@@ -89,7 +89,7 @@ enum Commands {
         #[arg(long, default_value_t = true)]
         verify: bool,
         /// Output format
-        #[arg(short, long, value_enum, default_value_t = print::Format::Long)]
+        #[arg(short, long, value_enum, default_value_t = print::Format::Short)]
         format: print::Format,
         /// Round number to retrieve. Leave empty to retrieve the latest round.
         beacon: Option<u64>,
@@ -122,7 +122,7 @@ enum RemoteCommand {
     /// Gives some information about the remote <name>.
     Show {
         /// Output format
-        #[arg(short, long, value_enum, default_value_t = print::Format::Long)]
+        #[arg(short, long, value_enum, default_value_t = print::Format::Short)]
         format: print::Format,
         name: Option<String>,
     },

@@ -23,6 +23,9 @@ struct RandResult {
 }
 
 impl Print for RandResult {
+    fn short(&self) -> Result<String> {
+        Ok(hex::encode(self.beacon.randomness()))
+    }
     fn long(&self) -> Result<String> {
         let relative = self.time.relative();
         let seconds = relative.num_seconds().abs() % 60;
@@ -54,7 +57,7 @@ impl Print for RandResult {
     }
 
     fn json(&self) -> Result<String> {
-        Ok(serde_json::to_string(self)?)
+        Ok(serde_json::to_string(&self.beacon)?)
     }
 }
 

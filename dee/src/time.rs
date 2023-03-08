@@ -148,6 +148,10 @@ impl RandomnessBeaconTime {
 }
 
 impl Print for RandomnessBeaconTime {
+    fn short(&self) -> Result<String> {
+        Ok(format!("{}", self.round()))
+    }
+
     fn long(&self) -> Result<String> {
         Ok(format!(
             r"{: <10}: {}
