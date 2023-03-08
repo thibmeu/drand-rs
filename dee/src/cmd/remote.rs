@@ -59,7 +59,7 @@ pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<Str
 }
 
 impl print::Print for ConfigChain {
-    fn pretty(&self) -> Result<String> {
+    fn long(&self) -> Result<String> {
         let info = self.info();
         Ok(format!(
             r"{: <10}: {}

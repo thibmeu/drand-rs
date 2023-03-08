@@ -23,7 +23,7 @@ struct RandResult {
 }
 
 impl Print for RandResult {
-    fn pretty(&self) -> Result<String> {
+    fn long(&self) -> Result<String> {
         let relative = self.time.relative();
         let seconds = relative.num_seconds().abs() % 60;
         let minutes = (relative.num_minutes()).abs() % 60;

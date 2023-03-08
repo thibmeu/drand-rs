@@ -73,7 +73,7 @@ enum Commands {
     },
     /// Retrieve public randomness.
     ///
-    /// BEACON defaults to the latest beacon, and FORMAT to pretty.
+    /// BEACON defaults to the latest beacon, and FORMAT to long.
     ///
     /// UPSTREAM is an existing remote, and defaults to the lastest used.
     ///
@@ -89,7 +89,7 @@ enum Commands {
         #[arg(long, default_value_t = true)]
         verify: bool,
         /// Output format
-        #[arg(short, long, value_enum, default_value_t = print::Format::Pretty)]
+        #[arg(short, long, value_enum, default_value_t = print::Format::Long)]
         format: print::Format,
         /// Round number to retrieve. Leave empty to retrieve the latest round.
         beacon: Option<u64>,
@@ -122,7 +122,7 @@ enum RemoteCommand {
     /// Gives some information about the remote <name>.
     Show {
         /// Output format
-        #[arg(short, long, value_enum, default_value_t = print::Format::Pretty)]
+        #[arg(short, long, value_enum, default_value_t = print::Format::Long)]
         format: print::Format,
         name: Option<String>,
     },
