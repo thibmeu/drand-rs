@@ -41,7 +41,7 @@ pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<Strin
     cfg.rename_chain(old.clone(), new.clone())?;
 
     if let Some(upstream) = cfg.upstream() {
-        if  upstream == old {
+        if upstream == old {
             cfg.set_upstream(&new)?;
         }
     }

@@ -39,7 +39,7 @@ enum Commands {
     /// * an RFC3339 date (2023-06-28 21:30:22)
     ///
     /// UPSTREAM is an existing remote, and defaults to the lastest used.
-    /// 
+    ///
     /// Example:
     ///     $ tar cvz ~/data | dee crypt -u myremote -r 30s > data.tar.gz.age
     ///     $ dee crypt --decrypt -o data.tar.gz data.tar.gz.age
@@ -72,11 +72,11 @@ enum Commands {
         input: Option<String>,
     },
     /// Retrieve public randomness.
-    /// 
+    ///
     /// BEACON defaults to the latest beacon, and FORMAT to pretty.
-    /// 
+    ///
     /// UPSTREAM is an existing remote, and defaults to the lastest used.
-    /// 
+    ///
     /// Example:
     ///     $ dee rand -u myremote 1000
     ///     $ dee rand
@@ -95,9 +95,9 @@ enum Commands {
         beacon: Option<u64>,
     },
     /// Manage set of tracked chains.
-    /// 
+    ///
     /// With no arguments, shows a list of existing remotes. Several subcommands are available to perform operations on the remotes.
-    /// 
+    ///
     /// With the -v option, remote URLs are shown as well.
     Remote {
         #[command(subcommand)]
@@ -147,12 +147,10 @@ async fn main() {
             verify,
             format,
             beacon,
-        } => {
-            match cfg.set_upstream_and_chain(set_upstream) {
-                Ok(chain) => cmd::rand(&cfg, format, chain, beacon, verify).await,
-                Err(err) => Err(err),
-            }
-        }
+        } => match cfg.set_upstream_and_chain(set_upstream) {
+            Ok(chain) => cmd::rand(&cfg, format, chain, beacon, verify).await,
+            Err(err) => Err(err),
+        },
         Commands::Crypt {
             encrypt: _,
             decrypt,
@@ -161,18 +159,16 @@ async fn main() {
             armor,
             output,
             input,
-        } => {
-            match cfg.set_upstream_and_chain(set_upstream) {
-                Ok(chain) => {
-                    if decrypt {
-                        cmd::crypt::decrypt(&cfg, output, input, chain).await
-                    } else {
-                        cmd::crypt::encrypt(&cfg, output, input, armor, chain, round).await
-                    }
-                },
-                Err(err) => Err(err),
-            }   
-        }
+        } => match cfg.set_upstream_and_chain(set_upstream) {
+            Ok(chain) => {
+                if decrypt {
+                    cmd::crypt::decrypt(&cfg, output, input, chain).await
+                } else {
+                    cmd::crypt::encrypt(&cfg, output, input, armor, chain, round).await
+                }
+            }
+            Err(err) => Err(err),
+        },
         Commands::Remote { command } => match command {
             Some(command) => match command {
                 RemoteCommand::Add { name, url } => cmd::remote::add(&mut cfg, name, url).await,
@@ -195,7 +191,9 @@ async fn main() {
     match output {
         Ok(result) => {
             cfg.store().unwrap();
-            println!("{result}")
+            if !result.is_empty() {
+                println!("{result}")
+            }
         }
         Err(err) => {
             eprintln!("error: {err}");
