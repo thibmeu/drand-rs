@@ -11,28 +11,24 @@ use crate::{
     time::RandomnessBeaconTime,
 };
 
-pub fn file_or_stdin(input: Option<String>) -> Box<dyn io::Read> {
+pub fn file_or_stdin(input: Option<String>) -> Result<Box<dyn io::Read>> {
     let reader: Box<dyn io::Read> = match input {
         Some(path) => Box::new(io::BufReader::new(
-            fs::File::open(path)
-                .map_err(|_e| anyhow!("error reading input file"))
-                .unwrap(),
+            fs::File::open(path).map_err(|_e| anyhow!("cannot read input file"))?,
         )),
         None => Box::new(io::BufReader::new(io::stdin())),
     };
-    reader
+    Ok(reader)
 }
 
-pub fn file_or_stdout(output: Option<String>) -> Box<dyn io::Write> {
+pub fn file_or_stdout(output: Option<String>) -> Result<Box<dyn io::Write>> {
     let writer: Box<dyn io::Write> = match output {
         Some(path) => Box::new(io::BufWriter::new(
-            fs::File::create(path)
-                .map_err(|_e| anyhow!("error creating output file"))
-                .unwrap(),
+            fs::File::create(path).map_err(|_e| anyhow!("cannot create output file"))?,
         )),
         None => Box::new(io::BufWriter::new(io::stdout())),
     };
-    writer
+    Ok(writer)
 }
 
 pub async fn encrypt(
@@ -54,8 +50,8 @@ pub async fn encrypt(
 
     let beacon_time = crate::time::round_from_option(chain, round).await?;
 
-    let src = file_or_stdin(input);
-    let dst = file_or_stdout(output);
+    let src = file_or_stdin(input)?;
+    let dst = file_or_stdout(output)?;
 
     tlock_age::encrypt(
         dst,
@@ -75,7 +71,7 @@ pub async fn decrypt(
     chain: ConfigChain,
 ) -> Result<String> {
     // todo(thibault): make this work with stdin
-    let src = file_or_stdin(input.clone());
+    let src = file_or_stdin(input.clone())?;
     let header = tlock_age::decrypt_header(src)?;
 
     let info = chain.info();
@@ -105,7 +101,7 @@ pub async fn decrypt(
         }
     };
 
-    let src = file_or_stdin(input);
-    let dst = file_or_stdout(output);
+    let src = file_or_stdin(input)?;
+    let dst = file_or_stdout(output)?;
     tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature()).map(|()| String::from(""))
 }
