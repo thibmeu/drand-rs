@@ -26,7 +26,7 @@ dee remote add mainnet https://api.drand.sh # Add a new beacon
 dee rand --set-upstream mainnet 1000 # Fetch round 1000 and set upstream to mainnet
 dee rand --format json # Fetch latest mainnet round as json
 
-dee remote add tlock https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c # Add a new beacon
+dee remote add tlock https://drand.cloudflare.com/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493 # Add a new beacon
 dee remote info tlock # Retrieve information about testnet beacon
 
 dee crypt --round 1000 --armor -o encrypted.pem test.txt # encrypt test.txt with timelock encryption
