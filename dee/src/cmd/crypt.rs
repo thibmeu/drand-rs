@@ -40,10 +40,6 @@ pub async fn encrypt(
     round: Option<String>,
 ) -> Result<String> {
     let info = chain.info();
-
-    if info.is_signature_on_g1() {
-        return Err(anyhow!("remote must have signatures on G2"));
-    }
     if !info.is_unchained() {
         return Err(anyhow!("remote must use unchained signatures"));
     }

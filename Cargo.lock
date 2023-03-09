@@ -2440,7 +2440,7 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 [[package]]
 name = "tlock"
 version = "0.1.0"
-source = "git+https://github.com/thibmeu/tlock-rs#86e22c4fb107c0580736809faad5477243838074"
+source = "git+https://github.com/thibmeu/tlock-rs#2be587dd6987c84fbd942587a7546bd328bffa6a"
 dependencies = [
  "anyhow",
  "async-std",
@@ -2458,7 +2458,7 @@ dependencies = [
 [[package]]
 name = "tlock_age"
 version = "0.1.0"
-source = "git+https://github.com/thibmeu/tlock-rs#86e22c4fb107c0580736809faad5477243838074"
+source = "git+https://github.com/thibmeu/tlock-rs#2be587dd6987c84fbd942587a7546bd328bffa6a"
 dependencies = [
  "age",
  "age-core",
