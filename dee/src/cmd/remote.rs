@@ -14,7 +14,10 @@ pub async fn add(cfg: &mut config::Local, name: String, url: String) -> Result<S
         return Err(anyhow!("remote {name} already exists."));
     }
     let chain = Chain::new(&url);
-    let info = chain.info().await?;
+    let info = chain
+        .info()
+        .await
+        .map_err(|_err| anyhow!("failed to retrieve information from remote '{}'", url))?;
 
     cfg.add_chain(name.clone(), ConfigChain::new(url, info))?;
 
