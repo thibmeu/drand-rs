@@ -42,7 +42,7 @@ You can leverage drand randomness as a seed for PRNG systems.
 ### bash
 
 ```bash
-RANDOM=$(dee get --format json | jq -r '.randomness'); echo $RANDOM $RANDOM $RANDOM
+RANDOM=$(dee rand); echo $RANDOM $RANDOM $RANDOM
 ```
 
 ### Python
