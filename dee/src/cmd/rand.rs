@@ -36,7 +36,7 @@ impl Print for RandResult {
             Ordering::Equal => "now",
             Ordering::Greater => "from now",
         };
-        let relative = format!("{hours:0<2}:{minutes:0<2}:{seconds:0<2} {epoch}");
+        let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2} {epoch}");
         Ok(format!(
             r"{: <10}: {}
 {: <10}: {}
