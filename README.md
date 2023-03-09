@@ -16,7 +16,7 @@ The reference interroperable Go implementation is available at [drand/drand](htt
 ## Install
 
 ```bash
-cargo install dee
+cargo install dee --git https://github.com/thibmeu/drand-rs
 ```
 
 ## Usage
