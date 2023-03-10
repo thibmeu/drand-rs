@@ -11,6 +11,17 @@ pub enum Format {
     Json,
 }
 
+impl Format {
+    pub fn new(long: bool, json: bool) -> Self {
+        match (long, json) {
+            (false, false) => Self::Short,
+            (true, false) => Self::Long,
+            (false, true) => Self::Json,
+            (true, true) => unreachable!("long and json format cannot be true together"),
+        }
+    }
+}
+
 pub trait Print {
     fn short(&self) -> Result<String>;
     fn long(&self) -> Result<String>;
