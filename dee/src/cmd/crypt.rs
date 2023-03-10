@@ -2,7 +2,7 @@ use std::{fs, io};
 
 use anyhow::{anyhow, Result};
 use drand_core::{
-    chain::{self, ChainClient, ChainOptions},
+    chain::{self, ChainOptions},
     http_chain_client::HttpChainClient,
 };
 

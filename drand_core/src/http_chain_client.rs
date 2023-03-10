@@ -85,15 +85,12 @@ impl HttpChainClient {
             false => Err(anyhow!("Beacon does not validate")),
         }
     }
-}
 
-#[async_trait]
-impl ChainClient for HttpChainClient {
-    fn options(&self) -> ChainOptions {
+    pub fn options(&self) -> ChainOptions {
         self.options.clone()
     }
 
-    async fn latest(&self) -> Result<RandomnessBeacon> {
+    pub async fn latest(&self) -> Result<RandomnessBeacon> {
         let beacon = self
             .http_client
             .get(self.beacon_url(String::from("latest"))?)
@@ -105,7 +102,7 @@ impl ChainClient for HttpChainClient {
         self.verify_beacon(beacon).await
     }
 
-    async fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
+    pub async fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
         let beacon = self
             .http_client
             .get(self.beacon_url(round_number.to_string())?)
@@ -117,8 +114,27 @@ impl ChainClient for HttpChainClient {
         self.verify_beacon(beacon).await
     }
 
-    fn chain(&self) -> Chain {
+    pub fn chain(&self) -> Chain {
         self.chain.clone()
+    }
+}
+
+#[async_trait]
+impl ChainClient for HttpChainClient {
+    fn options(&self) -> ChainOptions {
+        self.options()
+    }
+
+    async fn latest(&self) -> Result<RandomnessBeacon> {
+        self.latest().await
+    }
+
+    async fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
+        self.get(round_number).await
+    }
+
+    fn chain(&self) -> Chain {
+        self.chain()
     }
 }
 

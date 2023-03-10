@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use chrono::FixedOffset;
 use colored::Colorize;
-use drand_core::chain::{self, ChainClient, ChainInfo, ChainOptions};
+use drand_core::chain::{self, ChainInfo, ChainOptions};
 use drand_core::http_chain_client::HttpChainClient;
 use serde::{Deserialize, Serialize};
 

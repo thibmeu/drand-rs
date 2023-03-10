@@ -20,7 +20,6 @@ use drand_core::{chain, http_chain_client};
 
 let chain = chain::Chain::new("https://drand.cloudflare.com");
 
-use chain::ChainClient;
 let client = http_chain_client::HttpChainClient::new(chain, None);
 
 let latest = client.latest().await?;

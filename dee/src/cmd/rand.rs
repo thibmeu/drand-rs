@@ -5,7 +5,7 @@ use anyhow::Result;
 use colored::Colorize;
 use drand_core::{
     beacon::RandomnessBeacon,
-    chain::{self, ChainClient, ChainOptions},
+    chain::{self, ChainOptions},
     http_chain_client::HttpChainClient,
 };
 use serde::{Deserialize, Serialize};
