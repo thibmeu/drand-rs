@@ -129,6 +129,7 @@ pub enum RemoteCommand {
     },
 }
 
+#[allow(dead_code)]
 pub fn build() -> Cli {
     Cli::parse()
 }
