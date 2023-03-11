@@ -18,6 +18,7 @@ anyhow = "1.0.69"
 async-trait = "0.1.66"
 bls12_381 = { version = "0.7.1", features = ["experimental"] }
 hex = { version = "0.4.3", features = ["serde"] }
+openssl = { version = "0.10.29", features = ["vendored"] } # required for cross compile
 pairing = "0.22.0"
 reqwest = { version = "0.11.14", features = [ "json" ] }
 serde = { version = "1.0.152", features = ["derive"] }

@@ -20,12 +20,13 @@ jobs:
         name: [linux, armv7, arm64, windows, macos]
         include:
           - name: linux
-            os: ubuntu-18.04
+            os: ubuntu-22.04
+            build_deps: >
             archive_name: dee.tar.gz
             asset_suffix: x86_64-linux.tar.gz
 
           - name: armv7
-            os: ubuntu-18.04
+            os: ubuntu-22.04
             target: armv7-unknown-linux-gnueabihf
             build_deps: >
               gcc-arm-linux-gnueabihf
@@ -37,7 +38,7 @@ jobs:
             asset_suffix: armv7-linux.tar.gz
 
           - name: arm64
-            os: ubuntu-18.04
+            os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             build_deps: >
               gcc-aarch64-linux-gnu
@@ -111,19 +112,13 @@ jobs:
 
   deb:
     name: Debian ${{ matrix.name }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        name: [linux, linux-musl, armv7, armv7-musl, arm64, arm64-musl]
+        name: [linux, armv7, arm64]
         include:
           - name: linux
             target: x86_64-unknown-linux-gnu
-
-          - name: linux-musl
-            target: x86_64-unknown-linux-musl
-            build_deps: >
-              musl-tools
-            deb_flags: --variant=musl
 
           - name: armv7
             target: armv7-unknown-linux-gnueabihf
@@ -133,16 +128,6 @@ jobs:
               [target.armv7-unknown-linux-gnueabihf]
               linker = "arm-linux-gnueabihf-gcc"
 
-          - name: armv7-musl
-            target: armv7-unknown-linux-musleabihf
-            build_deps: >
-              gcc-arm-linux-gnueabihf
-              musl-tools
-            cargo_config: |
-              [target.armv7-unknown-linux-musleabihf]
-              linker = "arm-linux-gnueabihf-gcc"
-            deb_flags: --variant=musl
-
           - name: arm64
             target: aarch64-unknown-linux-gnu
             build_deps: >
@@ -150,16 +135,6 @@ jobs:
             cargo_config: |
               [target.aarch64-unknown-linux-gnu]
               linker = "aarch64-linux-gnu-gcc"
-
-          - name: arm64-musl
-            target: aarch64-unknown-linux-musl
-            build_deps: >
-              gcc-aarch64-linux-gnu
-              musl-tools
-            cargo_config: |
-              [target.aarch64-unknown-linux-musl]
-              linker = "aarch64-linux-gnu-gcc"
-            deb_flags: --variant=musl
 
     steps:
       - uses: actions/checkout@v3
