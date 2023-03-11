@@ -1,7 +1,7 @@
 [package]
 name = "dee"
 description = "An cli for drand, with support for timelock encryption."
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Thibault Meunier <crates@thibault.uk>"]
 edition = "2021"
 readme = "../README.md"

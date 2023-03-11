@@ -713,7 +713,7 @@ checksum = "eaa37046cc0f6c3cc6090fbdbf73ef0b8ef4cfcc37f6befc0020f63e8cf121e1"
 
 [[package]]
 name = "dee"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "anyhow",
  "chrono",
@@ -787,7 +787,7 @@ dependencies = [
 
 [[package]]
 name = "drand_core"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "anyhow",
  "async-trait",
