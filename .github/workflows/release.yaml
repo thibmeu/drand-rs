@@ -1,0 +1,212 @@
+name: Publish release binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'Testing the release workflow'
+        required: true
+        default: 'true'
+
+jobs:
+  build:
+    name: Publish for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [linux, armv7, arm64, windows, macos]
+        include:
+          - name: linux
+            os: ubuntu-18.04
+            build_deps: >
+              libfuse-dev
+            build_flags: --features mount
+            archive_name: dee.tar.gz
+            asset_suffix: x86_64-linux.tar.gz
+
+          - name: armv7
+            os: ubuntu-18.04
+            target: armv7-unknown-linux-gnueabihf
+            build_deps: >
+              gcc-arm-linux-gnueabihf
+            cargo_config: |
+              [target.armv7-unknown-linux-gnueabihf]
+              linker = "arm-linux-gnueabihf-gcc"
+            build_flags: --target armv7-unknown-linux-gnueabihf
+            archive_name: dee.tar.gz
+            asset_suffix: armv7-linux.tar.gz
+
+          - name: arm64
+            os: ubuntu-18.04
+            target: aarch64-unknown-linux-gnu
+            build_deps: >
+              gcc-aarch64-linux-gnu
+            cargo_config: |
+              [target.aarch64-unknown-linux-gnu]
+              linker = "aarch64-linux-gnu-gcc"
+            build_flags: --target aarch64-unknown-linux-gnu
+            archive_name: dee.tar.gz
+            asset_suffix: arm64-linux.tar.gz
+
+          - name: windows
+            os: windows-latest
+            archive_name: dee.zip
+            asset_suffix: x86_64-windows.zip
+
+          - name: macos
+            os: macos-latest
+            archive_name: dee.tar.gz
+            asset_suffix: x86_64-darwin.tar.gz
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+        if: matrix.target != ''
+
+      - name: Install linux build dependencies
+        run: sudo apt install ${{ matrix.build_deps }}
+        if: matrix.build_deps != ''
+
+      - name: Set up .cargo/config
+        run: |
+          mkdir .cargo
+          echo '${{ matrix.cargo_config }}' >.cargo/config
+        if: matrix.cargo_config != ''
+
+      - name: cargo build
+        run: cargo build --release --locked ${{ matrix.build_flags }}
+        working-directory: ./dee
+
+      - name: Create archive
+        run: |
+          mkdir -p release/dee
+          mv target/${{ matrix.target }}/release/dee* release/dee/
+          rm release/dee/*.d
+          tar czf ${{ matrix.archive_name }} -C release/ dee/
+        if: matrix.name != 'windows'
+
+      - name: Create archive [Windows]
+        run: |
+          mkdir -p release/dee
+          mv target/release/dee.exe release/dee/
+          cd release/
+          7z.exe a ../${{ matrix.archive_name }} dee/
+        shell: bash
+        if: matrix.name == 'windows'
+
+      - name: Upload archive to release
+        uses: svenstaro/upload-release-action@2.5.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.archive_name }}
+          asset_name: dee-$tag-${{ matrix.asset_suffix }}
+          tag: ${{ github.ref }}
+          prerelease: true
+        if: github.event.inputs.test != 'true'
+
+  deb:
+    name: Debian ${{ matrix.name }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        name: [linux, linux-musl, armv7, armv7-musl, arm64, arm64-musl]
+        include:
+          - name: linux
+            target: x86_64-unknown-linux-gnu
+            build_deps: >
+              libfuse-dev
+            build_flags: --features mount
+
+          - name: linux-musl
+            target: x86_64-unknown-linux-musl
+            build_deps: >
+              musl-tools
+            deb_flags: --variant=musl
+
+          - name: armv7
+            target: armv7-unknown-linux-gnueabihf
+            build_deps: >
+              gcc-arm-linux-gnueabihf
+            cargo_config: |
+              [target.armv7-unknown-linux-gnueabihf]
+              linker = "arm-linux-gnueabihf-gcc"
+
+          - name: armv7-musl
+            target: armv7-unknown-linux-musleabihf
+            build_deps: >
+              gcc-arm-linux-gnueabihf
+              musl-tools
+            cargo_config: |
+              [target.armv7-unknown-linux-musleabihf]
+              linker = "arm-linux-gnueabihf-gcc"
+            deb_flags: --variant=musl
+
+          - name: arm64
+            target: aarch64-unknown-linux-gnu
+            build_deps: >
+              gcc-aarch64-linux-gnu
+            cargo_config: |
+              [target.aarch64-unknown-linux-gnu]
+              linker = "aarch64-linux-gnu-gcc"
+
+          - name: arm64-musl
+            target: aarch64-unknown-linux-musl
+            build_deps: >
+              gcc-aarch64-linux-gnu
+              musl-tools
+            cargo_config: |
+              [target.aarch64-unknown-linux-musl]
+              linker = "aarch64-linux-gnu-gcc"
+            deb_flags: --variant=musl
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+      - name: cargo install cargo-deb
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-deb
+
+      - name: Install build dependencies
+        run: sudo apt install ${{ matrix.build_deps }}
+        if: matrix.build_deps != ''
+
+      - name: Set up .cargo/config
+        run: |
+          mkdir .cargo
+          echo '${{ matrix.cargo_config }}' >.cargo/config
+        if: matrix.cargo_config != ''
+
+      - name: cargo build
+        run: cargo build --release --locked --target ${{ matrix.target }} ${{ matrix.build_flags }}
+        working-directory: ./dee
+
+      - name: cargo deb
+        uses: actions-rs/cargo@v1
+        with:
+          command: deb
+          args: --package dee --no-build --target ${{ matrix.target }} ${{ matrix.deb_flags }}
+
+      - name: Upload Debian package to release
+        uses: svenstaro/upload-release-action@2.5.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ matrix.target }}/debian/*.deb
+          tag: ${{ github.ref }}
+          file_glob: true
+          prerelease: true
+        if: github.event.inputs.test != 'true'
