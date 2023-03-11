@@ -66,7 +66,6 @@ async fn main() {
             },
             None => cmd::remote::list(&cfg),
         },
-        cli::Commands::Config {} => cmd::config(),
     };
 
     match output {

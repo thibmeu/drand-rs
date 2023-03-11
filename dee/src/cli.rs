@@ -103,8 +103,6 @@ pub enum Commands {
         #[command(subcommand)]
         command: Option<RemoteCommand>,
     },
-    /// Print path to configuration file.
-    Config {},
 }
 
 #[derive(Subcommand)]

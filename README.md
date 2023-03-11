@@ -75,4 +75,16 @@ fn main() {
 
 ## Details
 
+### Cryptography
+
 This client supports validation of chained and unchained randomness, both with signature on G1 and on G2.
+
+### Default configuration path
+
+`dee` configuration file is available at the following
+
+| OS      | Path                                                           |
+|:--------|:---------------------------------------------------------------|
+| Linux   | `/home/alice/.config/dee/default.toml`                         |
+| Windows | `C:\Users\Alice\AppData\Roaming\dee\config\default.toml`       |
+| macOS   | `/Users/Alice/Library/Application Support/rs.dee/default.toml` |
