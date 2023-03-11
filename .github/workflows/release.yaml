@@ -21,9 +21,6 @@ jobs:
         include:
           - name: linux
             os: ubuntu-18.04
-            build_deps: >
-              libfuse-dev
-            build_flags: --features mount
             archive_name: dee.tar.gz
             asset_suffix: x86_64-linux.tar.gz
 
@@ -121,9 +118,6 @@ jobs:
         include:
           - name: linux
             target: x86_64-unknown-linux-gnu
-            build_deps: >
-              libfuse-dev
-            build_flags: --features mount
 
           - name: linux-musl
             target: x86_64-unknown-linux-musl
