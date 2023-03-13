@@ -195,7 +195,7 @@ impl From<ChainInfo> for ChainVerification {
 
 #[async_trait]
 /// Drand client, that can retrieve and validate information from a given chain.
-pub trait ChainClient {
+trait ChainClient {
     /// Options that are used to validate chain result.
     fn options(&self) -> ChainOptions;
     /// Retrieve latest beacon.

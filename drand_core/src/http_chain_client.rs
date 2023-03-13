@@ -1,11 +1,10 @@
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use std::sync::Mutex;
 use std::time;
 
 use crate::{
     beacon::RandomnessBeacon,
-    chain::{Chain, ChainClient, ChainInfo, ChainOptions},
+    chain::{Chain, ChainInfo, ChainOptions},
 };
 
 /// HTTP Client for drand
@@ -29,10 +28,7 @@ impl HttpChainClient {
             chain,
             options,
             cached_chain_info: Mutex::new(None),
-            http_client: reqwest::Client::builder()
-                .user_agent("drand-rs")
-                .build()
-                .unwrap(),
+            http_client: reqwest::Client::builder().build().unwrap(),
         }
     }
 
@@ -116,25 +112,6 @@ impl HttpChainClient {
 
     pub fn chain(&self) -> Chain {
         self.chain.clone()
-    }
-}
-
-#[async_trait]
-impl ChainClient for HttpChainClient {
-    fn options(&self) -> ChainOptions {
-        self.options()
-    }
-
-    async fn latest(&self) -> Result<RandomnessBeacon> {
-        self.latest().await
-    }
-
-    async fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
-        self.get(round_number).await
-    }
-
-    fn chain(&self) -> Chain {
-        self.chain()
     }
 }
 
