@@ -48,15 +48,26 @@ pub async fn encrypt(
 
     let src = file_or_stdin(input)?;
     let dst = file_or_stdout(output)?;
-
-    tlock_age::encrypt(
-        dst,
-        src,
-        armor,
-        &info.hash(),
-        &info.public_key(),
-        beacon_time.round(),
-    )
+    if armor {
+        let mut dst = tlock_age::armor::ArmoredWriter::wrap_output(dst)?;
+        tlock_age::encrypt(
+            &mut dst,
+            src,
+            &info.hash(),
+            &info.public_key(),
+            beacon_time.round(),
+        )?;
+        dst.finish()?;
+        Ok(())
+    } else {
+        tlock_age::encrypt(
+            dst,
+            src,
+            &info.hash(),
+            &info.public_key(),
+            beacon_time.round(),
+        )
+    }
     .map(|()| String::from(""))
 }
 
