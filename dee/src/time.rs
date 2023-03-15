@@ -104,7 +104,7 @@ impl RandomnessBeaconTime {
     pub fn from_round(info: &ChainInfo, round: u64) -> Self {
         let genesis =
             chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
-        let absolute = genesis + chrono::Duration::seconds((round * info.period()) as i64);
+        let absolute = genesis + chrono::Duration::seconds(((round - 1) * info.period()) as i64);
         let relative = absolute - chrono::Utc::now().naive_utc();
         Self {
             round,
@@ -118,7 +118,7 @@ impl RandomnessBeaconTime {
             chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
 
         let absolute = chrono::Utc::now().naive_utc() + relative;
-        let round = ((absolute - genesis).num_seconds() / (info.period() as i64)) as u64;
+        let round = ((absolute - genesis).num_seconds() / (info.period() as i64) + 1) as u64;
 
         Self {
             round,
@@ -137,7 +137,7 @@ impl RandomnessBeaconTime {
             chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
 
         let relative = absolute - chrono::Utc::now().naive_utc();
-        let round = ((absolute - genesis).num_seconds() / (info.period() as i64)) as u64;
+        let round = ((absolute - genesis).num_seconds() / (info.period() as i64) + 1) as u64;
 
         Self {
             round,
