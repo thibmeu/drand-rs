@@ -131,8 +131,10 @@ impl ChainedBeacon {
 
 impl Message for ChainedBeacon {
     fn message(&self) -> Result<Vec<u8>> {
-        let mut buf = [0; 96 + 8];
-        let (signature_buf, round_buf) = buf.split_at_mut(96);
+        // First round signature is on the genesis seed, which size is 32B, and not 96B like G2 signatures.
+        let len = if self.round == 1 { 32 } else { 96 };
+        let mut buf = vec![0; len + 8];
+        let (signature_buf, round_buf) = buf.split_at_mut(len);
 
         signature_buf.clone_from_slice(&self.previous_signature);
         round_buf.clone_from_slice(&self.round.to_be_bytes());
