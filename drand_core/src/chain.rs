@@ -242,17 +242,17 @@ pub mod tests {
         }"#).unwrap()
     }
 
-    /// drand testnet (curl -sS https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c/info)
+    /// drand fastnet (curl -sS https://drand.cloudflare.com/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493/info)
     pub fn unchained_chain_on_g1_info() -> ChainInfo {
         serde_json::from_str(r#"{
-            "public_key": "8f6e58c3dbc6d7e58e32baee6881fecc854161b4227c40b01ae7f0593cea964599648f91a0fa2d6b489a7fb0a552b959014007e05d0c069991be4d064bbe28275bd4c3a3cabf16c48f86f4566909dd6eb6d0e84fd6069c414562ca6abf5fdc13",
+            "public_key": "a0b862a7527fee3a731bcb59280ab6abd62d5c0b6ea03dc4ddf6612fdfc9d01f01c31542541771903475eb1ec6615f8d0df0b8b6dce385811d6dcf8cbefb8759e5e616a3dfd054c928940766d9a5b9db91e3b697e5d70a975181e007f87fca5e",
             "period": 3,
-            "genesis_time": 1675262550,
-            "hash": "f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c",
-            "groupHash": "73c191da8ca22628987bc9fb330e2b82f9e38728a8708b10b42b43c90643b798",
+            "genesis_time": 1677685200,
+            "hash": "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493",
+            "groupHash": "a81e9d63f614ccdb144b8ff79fbd4d5a2d22055c0bfe4ee9a8092003dab1c6c0",
             "schemeID": "bls-unchained-on-g1",
             "metadata": {
-                "beaconID": "testnet-g"
+              "beaconID": "fastnet"
             }
         }"#).unwrap()
     }

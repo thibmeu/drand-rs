@@ -195,6 +195,16 @@ pub mod tests {
         }"#).unwrap()
     }
 
+    /// drand mainnet (curl -sS https://drand.cloudflare.com/public/1)
+    pub fn chained_beacon_1() -> RandomnessBeacon {
+        serde_json::from_str(r#"{
+            "round": 1,
+            "randomness": "101297f1ca7dc44ef6088d94ad5fb7ba03455dc33d53ddb412bbc4564ed986ec",
+            "signature": "8d61d9100567de44682506aea1a7a6fa6e5491cd27a0a0ed349ef6910ac5ac20ff7bc3e09d7c046566c9f7f3c6f3b10104990e7cb424998203d8f7de586fb7fa5f60045417a432684f85093b06ca91c769f0e7ca19268375e659c2a2352b4655",
+            "previous_signature": "176f93498eac9ca337150b46d21dd58673ea4e3581185f869672e59fa4cb390a"
+          }"#).unwrap()
+    }
+
     /// drand testnet (curl -sS https://pl-us.testnet.drand.sh/7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf/public/1000000)
     pub fn unchained_beacon() -> RandomnessBeacon {
         serde_json::from_str(r#"{
@@ -204,19 +214,19 @@ pub mod tests {
         }"#).unwrap()
     }
 
-    /// drand testnet (curl -sS https://testnet0-api.drand.cloudflare.com/f3827d772c155f95a9fda8901ddd59591a082df5ac6efe3a479ddb1f5eeb202c/public/784604)
+    /// drand fastnet (curl -sS https://drand.cloudflare.com/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493/public/100000)
     pub fn unchained_beacon_on_g1() -> RandomnessBeacon {
         serde_json::from_str(r#"{
-            "round": 784604,
-            "randomness": "faf43e19bf00738f5cd8e1904a274f6d9b2184025136660a3e367ea0459f41af",
-            "signature": "a029a26d9d0d8e31ef037a81ba5f13a22758b2980e67920c3d233b18b292cd27e106bafd9922a6b1ae69818cd300139f"
+            "round": 100000,
+            "randomness": "37aa25aa1e0b52440502e6f841c956bf72d693770a511e59768ecb7777c172ce",
+            "signature": "b370f411d5479fc342b504347226e4b543fee28698fa721876d55d36c12a20f3f49b7abd31ee99979e2d28e14f1d3152"
         }"#).unwrap()
     }
 
     /// invalid beacon. Round should be 1,000,000, but it 1
     pub fn invalid_beacon() -> RandomnessBeacon {
         serde_json::from_str(r#"{
-            "round": 1,
+            "round": 1234,
             "randomness": "a26ba4d229c666f52a06f1a9be1278dcc7a80dbc1dd2004a1ae7b63cb79fd37e",
             "signature": "87e355169c4410a8ad6d3e7f5094b2122932c1062f603e6628aba2e4cb54f46c3bf1083c3537cd3b99e8296784f46fb40e090961cf9634f02c7dc2a96b69fc3c03735bc419962780a71245b72f81882cf6bb9c961bcf32da5624993bb747c9e5",
             "previous_signature": "86bbc40c9d9347568967add4ddf6e351aff604352a7e1eec9b20dea4ca531ed6c7d38de9956ffc3bb5a7fabe28b3a36b069c8113bd9824135c3bff9b03359476f6b03beec179d4aeff456f4d34bbf702b9af78c3bb44e1892ace8e581bf4afa9"
@@ -257,6 +267,13 @@ pub mod tests {
         match chained_beacon().verify(chained_chain_info()) {
             Ok(ok) => assert!(ok),
             Err(_err) => panic!("Chained beacon should validate on chained info"),
+        }
+
+        match chained_beacon_1().verify(chained_chain_info()) {
+            Ok(ok) => assert!(ok),
+            Err(_err) => {
+                panic!("Chained beacon should validate on chained info for the first beacon")
+            }
         }
 
         match unchained_beacon().verify(unchained_chain_info()) {
