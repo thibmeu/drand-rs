@@ -535,7 +535,7 @@ dependencies = [
 
 [[package]]
 name = "dee"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "anyhow",
  "chrono",
@@ -609,7 +609,7 @@ dependencies = [
 
 [[package]]
 name = "drand_core"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "anyhow",
  "async-trait",
