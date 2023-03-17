@@ -2195,10 +2195,11 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 [[package]]
 name = "tlock"
 version = "0.1.0"
-source = "git+https://github.com/thibmeu/tlock-rs#b300082864a3a27603975b13194a5d87f06f8352"
+source = "git+https://github.com/thibmeu/tlock-rs#93b508a4bf975e0540f1a4918492804c1da44b51"
 dependencies = [
  "anyhow",
  "bls12_381_plus",
+ "getrandom 0.2.8",
  "group 0.12.1",
  "itertools",
  "rand 0.8.5",
@@ -2211,7 +2212,7 @@ dependencies = [
 [[package]]
 name = "tlock_age"
 version = "0.1.0"
-source = "git+https://github.com/thibmeu/tlock-rs#b300082864a3a27603975b13194a5d87f06f8352"
+source = "git+https://github.com/thibmeu/tlock-rs#93b508a4bf975e0540f1a4918492804c1da44b51"
 dependencies = [
  "age",
  "age-core",
