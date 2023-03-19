@@ -28,7 +28,7 @@ pub struct Cli {
 pub enum Commands {
     /// Interact with timelock encryption
     ///
-    /// INPUT defaults to standard input (not supported for decryption), and OUTPUT defaults to standard output.
+    /// INPUT defaults to standard input, and OUTPUT defaults to standard output.
     ///
     /// ROUND can be:
     /// * a specific round (123),

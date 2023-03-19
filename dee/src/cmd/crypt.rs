@@ -77,9 +77,11 @@ pub async fn decrypt(
     input: Option<String>,
     chain: ConfigChain,
 ) -> Result<String> {
-    // todo(thibault): make this work with stdin
-    let src = file_or_stdin(input.clone())?;
-    let header = tlock_age::decrypt_header(src)?;
+    let mut src = ResetReader::new(file_or_stdin(input.clone())?);
+    let header = tlock_age::decrypt_header(&mut src)?;
+    // Once headers have been read, reset the reader to pass it as if unmodified to tlock_age::decrypt
+    // This allows the same reader to be used twice.
+    src.reset();
 
     let info = chain.info();
     let chain = chain::Chain::new(&chain.url());
@@ -108,7 +110,67 @@ pub async fn decrypt(
         }
     };
 
-    let src = file_or_stdin(input)?;
     let dst = file_or_stdout(output)?;
     tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature()).map(|()| String::from(""))
+}
+
+// Reader buffering every read, and with the ability to re-read what's been read already.
+// This is useful when one need to use stdin reader twice.
+struct ResetReader<R> {
+    inner: R,
+    buf: Vec<u8>,
+    offset: usize,
+    is_buffer_enabled: bool,
+}
+
+impl<R: std::io::Read> ResetReader<R> {
+    pub fn new(inner: R) -> Self {
+        Self {
+            inner,
+            buf: vec![],
+            offset: 0,
+            is_buffer_enabled: true,
+        }
+    }
+
+    /// Reset offset, allowing read from a buf again
+    pub fn reset(&mut self) {
+        self.offset = 0;
+        self.is_buffer_enabled = false;
+    }
+}
+
+impl<R: std::io::Read> std::io::Read for ResetReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        // Buffer contains enough bytes for this read
+        if self.buf.len() < self.offset {
+            buf.copy_from_slice(&self.buf[..buf.len()]);
+            self.offset += buf.len();
+            return Ok(buf.len());
+        }
+
+        // Read is a mix of read from buffer and from the reader
+        let n_read_bytes = self.buf.len() - self.offset;
+        let (from_buf, from_read) = buf.split_at_mut(n_read_bytes);
+        // First read from the inner buffer
+        if n_read_bytes > 0 {
+            from_buf.copy_from_slice(self.buf.as_slice());
+            self.offset += n_read_bytes;
+        }
+
+        if from_read.is_empty() {
+            return Ok(n_read_bytes);
+        }
+
+        // Now read from the reader
+        let r = match self.inner.read(from_read) {
+            Ok(size) => size,
+            Err(e) => return Err(e),
+        };
+        if self.is_buffer_enabled {
+            self.buf.append(from_read[..r].to_vec().as_mut());
+            self.offset += r;
+        }
+        Ok(n_read_bytes + r)
+    }
 }
