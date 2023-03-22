@@ -115,19 +115,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "asynchronous-codec"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06a0daa378f5fd10634e44b0a29b2a87b890657658e072a30d6f26e57ddee182"
-dependencies = [
- "bytes",
- "futures-sink",
- "futures-util",
- "memchr",
- "pin-project-lite",
-]
-
-[[package]]
 name = "atomic-polyfill"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -535,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "dee"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -609,7 +596,7 @@ dependencies = [
 
 [[package]]
 name = "drand_core"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2194,8 +2181,8 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tlock"
-version = "0.1.0"
-source = "git+https://github.com/thibmeu/tlock-rs#93b508a4bf975e0540f1a4918492804c1da44b51"
+version = "0.0.1"
+source = "git+https://github.com/thibmeu/tlock-rs#3ca5fabd8457f7502e314a58c3fc8f7c5c3f29b7"
 dependencies = [
  "anyhow",
  "bls12_381_plus",
@@ -2206,13 +2193,12 @@ dependencies = [
  "serde",
  "sha2 0.9.9",
  "tracing",
- "unsigned-varint",
 ]
 
 [[package]]
 name = "tlock_age"
-version = "0.1.0"
-source = "git+https://github.com/thibmeu/tlock-rs#93b508a4bf975e0540f1a4918492804c1da44b51"
+version = "0.0.1"
+source = "git+https://github.com/thibmeu/tlock-rs#3ca5fabd8457f7502e314a58c3fc8f7c5c3f29b7"
 dependencies = [
  "age",
  "age-core",
@@ -2405,18 +2391,6 @@ checksum = "7d3160b73c9a19f7e2939a2fdad446c57c1bbbbf4d919d3213ff1267a580d8b5"
 dependencies = [
  "crypto-common",
  "subtle",
-]
-
-[[package]]
-name = "unsigned-varint"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d86a8dc7f45e4c1b0d30e43038c38f274e77af056aa5f74b93c2cf9eb3c1c836"
-dependencies = [
- "asynchronous-codec",
- "bytes",
- "futures-io",
- "futures-util",
 ]
 
 [[package]]
