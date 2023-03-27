@@ -34,6 +34,8 @@ The reference interroperable Go implementation is available at [drand/drand](htt
 ## What's next
 
 * P2P randomness retrieval
+* Built-in beacon time estimation
+* Faster BLS12-381 library
 
 ## Installation
 
