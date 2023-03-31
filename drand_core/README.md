@@ -49,9 +49,9 @@ The library is tested against the following targets: `x86_64-unknown-linux-gnu`,
 Retrieve the latest beacon from `https://drand.cloudflare.com`.
 
 ```rust
-use drand_core::http_chain_client::HttpChainClient;
+use drand_core::HttpClient;
 
-let client: HttpChainClient = "https://drand.cloudflare.com".try_into().unwrap();
+let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
 
 let latest = client.latest().await?;
 ```

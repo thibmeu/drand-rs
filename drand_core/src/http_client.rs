@@ -9,14 +9,14 @@ use crate::{
 /// HTTP Client for drand
 /// Queries a specified HTTP endpoint given by `chain`, with specific `options`
 /// By default, the client verifies answers, and caches retrieved chain informations
-pub struct HttpChainClient {
+pub struct HttpClient {
     base_url: url::Url,
     options: ChainOptions,
     cached_chain_info: Mutex<Option<ChainInfo>>,
     http_client: reqwest::Client,
 }
 
-impl HttpChainClient {
+impl HttpClient {
     pub fn new(base_url: &str, options: Option<ChainOptions>) -> Result<Self> {
         // The most common error is when user forget to add protocol in front of the provided URL string.
         // The error provided by reqwest::Url is rather obscure when that happens.
@@ -130,7 +130,7 @@ impl HttpChainClient {
     }
 }
 
-impl TryFrom<&str> for HttpChainClient {
+impl TryFrom<&str> for HttpClient {
     type Error = anyhow::Error;
 
     fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
@@ -138,7 +138,7 @@ impl TryFrom<&str> for HttpChainClient {
     }
 }
 
-impl FromStr for HttpChainClient {
+impl FromStr for HttpClient {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
@@ -178,7 +178,7 @@ mod tests {
             .await;
 
         // test client without cache
-        let no_cache_client = HttpChainClient::new(
+        let no_cache_client = HttpClient::new(
             server.url().as_str(),
             Some(ChainOptions::new(true, false, None)),
         )
@@ -228,7 +228,7 @@ mod tests {
             .await;
 
         // test client with cache
-        let cache_client = HttpChainClient::new(
+        let cache_client = HttpClient::new(
             server.url().as_str(),
             Some(ChainOptions::new(true, true, None)),
         )
@@ -279,7 +279,7 @@ mod tests {
             .await;
 
         // test client without cache
-        let client = HttpChainClient::new(
+        let client = HttpClient::new(
             valid_server.url().as_str(),
             Some(ChainOptions::new(true, false, None)),
         )
@@ -313,7 +313,7 @@ mod tests {
             .await;
 
         // test client without cache
-        let client = HttpChainClient::new(
+        let client = HttpClient::new(
             invalid_server.url().as_str(),
             Some(ChainOptions::new(true, false, None)),
         )
@@ -351,7 +351,7 @@ mod tests {
 
         // test client without cache
         let unchained_info = unchained_chain_info();
-        let unchained_client = HttpChainClient::new(
+        let unchained_client = HttpClient::new(
             valid_server.url().as_str(),
             Some(ChainOptions::new(
                 true,
@@ -373,7 +373,7 @@ mod tests {
 
         // test with not the correct hash
         let chained_info = chained_chain_info();
-        let invalid_client = HttpChainClient::new(
+        let invalid_client = HttpClient::new(
             valid_server.url().as_str(),
             Some(ChainOptions::new(
                 true,
@@ -389,7 +389,7 @@ mod tests {
         };
         // test with not the correct public_key
         let chained_info = chained_chain_info();
-        let invalid_client = HttpChainClient::new(
+        let invalid_client = HttpClient::new(
             valid_server.url().as_str(),
             Some(ChainOptions::new(
                 true,

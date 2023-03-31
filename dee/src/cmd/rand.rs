@@ -3,9 +3,7 @@ use std::cmp::Ordering;
 use anyhow::Result;
 
 use colored::Colorize;
-use drand_core::{
-    beacon::RandomnessBeacon, chain::ChainOptions, http_chain_client::HttpChainClient,
-};
+use drand_core::{beacon::RandomnessBeacon, ChainOptions, HttpClient};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -69,7 +67,7 @@ pub async fn rand(
     let base_url = chain.url();
     let info = chain.info();
 
-    let client = HttpChainClient::new(
+    let client = HttpClient::new(
         &base_url,
         Some(ChainOptions::new(verify, true, Some(info.clone().into()))),
     )?;

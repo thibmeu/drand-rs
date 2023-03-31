@@ -9,12 +9,12 @@
 //! ## Usage
 //!
 //! ```rust
-//! use drand_core::http_chain_client::HttpChainClient;
+//! use drand_core::HttpClient;
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!   // Create a new client
-//!   let client: HttpChainClient = "https://drand.cloudflare.com".try_into().unwrap();
+//!   let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
 //!   
 //!   // Get the latest beacon. By default, it verifies its signature against the chain info.
 //!   let beacon = client.latest().await.unwrap();
@@ -27,4 +27,6 @@
 pub mod beacon;
 mod bls_signatures;
 pub mod chain;
-pub mod http_chain_client;
+pub use chain::ChainOptions;
+mod http_client;
+pub use http_client::HttpClient;

@@ -1,7 +1,7 @@
 use std::{fs, io};
 
 use anyhow::{anyhow, Result};
-use drand_core::{chain::ChainOptions, http_chain_client::HttpChainClient};
+use drand_core::{ChainOptions, HttpClient};
 
 use crate::{
     config::{self, ConfigChain},
@@ -82,7 +82,7 @@ pub async fn decrypt(
 
     let info = chain.info();
 
-    let client = HttpChainClient::new(
+    let client = HttpClient::new(
         &chain.url(),
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
     )?;

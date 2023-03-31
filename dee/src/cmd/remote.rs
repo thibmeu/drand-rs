@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use chrono::{TimeZone, Utc};
 use colored::Colorize;
-use drand_core::http_chain_client::HttpChainClient;
+use drand_core::HttpClient;
 use log::{log_enabled, Level};
 
 use crate::{
@@ -13,7 +13,7 @@ pub async fn add(cfg: &mut config::Local, name: String, url: &str) -> Result<Str
     if cfg.chain(&name).is_some() {
         return Err(anyhow!("remote {name} already exists."));
     }
-    let client: HttpChainClient = url.try_into()?;
+    let client: HttpClient = url.try_into()?;
     let info = client.chain_info().await.map_err(|err| {
         anyhow!("failed to retrieve information from remote '{name}'. server response: {err}")
     })?;

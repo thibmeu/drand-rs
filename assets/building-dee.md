@@ -199,7 +199,7 @@ tlock.Encrypt(dst, src, roundNumber)
 Rust
 ```rust
 let chain = Chain::new("https://api.drand.sh");
-let client = HttpChainClient::new(chain, None);
+let client = HttpClient::new(chain, None);
 let info = client.chain().info().await?;
 
 tlock_age::encrypt(
