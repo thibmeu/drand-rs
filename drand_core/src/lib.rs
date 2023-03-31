@@ -14,8 +14,8 @@
 //! #[tokio::main]
 //! async fn main() {
 //!   // Create a new client
-//!   let chain = chain::Chain::new("https://drand.cloudflare.com");
-//!   let client = http_chain_client::HttpChainClient::new(chain, None);
+//!   let chain: chain::Chain = "https://drand.cloudflare.com".try_into().unwrap();
+//!   let client: http_chain_client::HttpChainClient = chain.into();
 //!   
 //!   // Get the latest beacon. By default, it verifies its signature against the chain info.
 //!   let beacon = client.latest().await.unwrap();

@@ -1,4 +1,6 @@
-use anyhow::Result;
+use std::str::FromStr;
+
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
@@ -85,29 +87,57 @@ impl ChainInfo {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 /// HTTP drand chain, identified by a base URL
 /// e.g https://drand.cloudflare.com
 pub struct Chain {
-    base_url: String,
+    base_url: url::Url,
 }
 
 impl Chain {
-    pub fn new(base_url: &str) -> Self {
-        Self {
-            base_url: String::from(base_url),
-        }
-    }
-
     pub fn base_url(&self) -> String {
-        self.base_url.clone()
+        self.base_url.to_string()
     }
 
     pub async fn info(&self) -> Result<ChainInfo> {
-        Ok(reqwest::get(format!("{}/info", self.base_url))
-            .await?
-            .json::<ChainInfo>()
-            .await?)
+        let response = reqwest::get(self.base_url.join("info")?).await?;
+        match response.error_for_status_ref() {
+            Ok(_response) => Ok(response.json::<ChainInfo>().await?),
+            Err(_err) => Err(anyhow!(
+                "{}",
+                response.text().await.map_err(|e| anyhow!(e))?
+            )),
+        }
+    }
+}
+
+impl TryFrom<&str> for Chain {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+        Self::from_str(value)
+    }
+}
+
+impl FromStr for Chain {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        // The most common error is when user forget to add protocol in front of the provided URL string.
+        // The error provided by reqwest::Url is rather obscure when that happens.
+        let mut url = reqwest::Url::parse(s).map_err(|e| {
+            if e == url::ParseError::RelativeUrlWithoutBase {
+                anyhow!("{e}. You might need to add \"https://\" to the provided URL.")
+            } else {
+                anyhow!(e)
+            }
+        })?;
+        // Ensure base URL ends with a trailing slash.
+        // Given it's the base for API calls, it allows for easier joins in other methods.
+        if !url.path().ends_with('/') {
+            url.set_path(&format!("{}/", url.path()));
+        }
+        Ok(Self { base_url: url })
     }
 }
 
@@ -126,14 +156,10 @@ impl ChainOptions {
         is_cache: bool,
         chain_verification: Option<ChainVerification>,
     ) -> Self {
-        let chain_verification = match chain_verification {
-            Some(cv) => cv,
-            None => ChainVerification::default(),
-        };
         Self {
             is_beacon_verification,
             is_cache,
-            chain_verification,
+            chain_verification: chain_verification.unwrap_or_default(),
         }
     }
 
@@ -258,6 +284,22 @@ pub mod tests {
     }
 
     #[test]
+    fn chain_parsing_success_works() {
+        let no_trailing_url = "https://example.com";
+        let _chain: Chain = no_trailing_url.try_into().unwrap();
+
+        let trailing_url = "https://example.com/";
+        let _chain: Chain = trailing_url.try_into().unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn chain_parsing_failure_works() {
+        let no_protocol_url = "example.com/";
+        let _chain: Chain = no_protocol_url.try_into().unwrap();
+    }
+
+    #[test]
     fn chain_verification_success_works() {
         // Full validation should pass
         let full_verification = ChainVerification::new(
@@ -341,7 +383,7 @@ pub mod tests {
             .create_async()
             .await;
 
-        let chain = Chain::new(server.url().as_str());
+        let chain: Chain = server.url().as_str().try_into().unwrap();
         let chain_info = chain.info().await;
         match chain_info {
             Ok(info) => assert_eq!(info, chained_chain_info()),
@@ -360,7 +402,7 @@ pub mod tests {
             .create_async()
             .await;
 
-        let chain = Chain::new(server.url().as_str());
+        let chain: Chain = server.url().as_str().try_into().unwrap();
         let chain_info = chain.info().await;
         match chain_info {
             Ok(_) => panic!(""),

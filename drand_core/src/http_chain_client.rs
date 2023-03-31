@@ -18,14 +18,9 @@ pub struct HttpChainClient {
 
 impl HttpChainClient {
     pub fn new(chain: Chain, options: Option<ChainOptions>) -> Self {
-        let options = match options {
-            Some(options) => options,
-            None => ChainOptions::default(),
-        };
-
         Self {
             chain,
-            options,
+            options: options.unwrap_or_default(),
             cached_chain_info: Mutex::new(None),
             http_client: reqwest::Client::builder().build().unwrap(),
         }
@@ -44,25 +39,25 @@ impl HttpChainClient {
             let cached = self.cached_chain_info.lock().unwrap().to_owned();
             match cached {
                 Some(info) => Ok(info),
-                None => match self.chain_info_no_cache().await {
-                    Ok(info) => {
-                        *self.cached_chain_info.lock().unwrap() = Some(info.clone());
-                        Ok(info)
-                    }
-                    Err(err) => Err(err),
-                },
+                None => {
+                    let info = self.chain_info_no_cache().await?;
+                    *self.cached_chain_info.lock().unwrap() = Some(info.clone());
+                    Ok(info)
+                }
             }
         } else {
             self.chain_info_no_cache().await
         }
     }
 
-    fn beacon_url(&self, round: String) -> Result<String> {
-        let query = match self.options().is_cache() {
-            true => String::from(""),
-            false => format!("?{}", rand::random::<u64>()),
-        };
-        Ok(format!("{}/public/{round}{query}", self.chain.base_url()))
+    fn beacon_url(&self, round: String) -> Result<reqwest::Url> {
+        let url: reqwest::Url = self.chain.base_url().as_str().try_into()?;
+        let mut url = url.join(&format!("public/{round}"))?;
+        if !self.options().is_cache() {
+            url.query_pairs_mut()
+                .append_key_only(format!("{}", rand::random::<u64>()).as_str());
+        }
+        Ok(url)
     }
 
     async fn verify_beacon(&self, beacon: RandomnessBeacon) -> Result<RandomnessBeacon> {
@@ -83,7 +78,7 @@ impl HttpChainClient {
     pub async fn latest(&self) -> Result<RandomnessBeacon> {
         let beacon = self
             .http_client
-            .get(self.beacon_url(String::from("latest"))?)
+            .get(self.beacon_url("latest".to_string())?)
             .send()
             .await?
             .json::<RandomnessBeacon>()
@@ -106,6 +101,12 @@ impl HttpChainClient {
 
     pub fn chain(&self) -> Chain {
         self.chain.clone()
+    }
+}
+
+impl From<Chain> for HttpChainClient {
+    fn from(value: Chain) -> Self {
+        Self::new(value, None)
     }
 }
 
@@ -141,7 +142,7 @@ mod tests {
             .create_async()
             .await;
 
-        let chain = Chain::new(&server.url());
+        let chain: Chain = server.url().as_str().try_into().unwrap();
 
         // test client without cache
         let no_cache_client =
@@ -190,7 +191,7 @@ mod tests {
             .create_async()
             .await;
 
-        let chain = Chain::new(&server.url());
+        let chain: Chain = server.url().as_str().try_into().unwrap();
 
         // test client with cache
         let cache_client =
@@ -240,7 +241,7 @@ mod tests {
             .create_async()
             .await;
 
-        let valid_chain = Chain::new(&valid_server.url());
+        let valid_chain: Chain = valid_server.url().as_str().try_into().unwrap();
 
         // test client without cache
         let client = HttpChainClient::new(
@@ -275,7 +276,7 @@ mod tests {
             .create_async()
             .await;
 
-        let invalid_chain = Chain::new(&invalid_server.url());
+        let invalid_chain: Chain = invalid_server.url().as_str().try_into().unwrap();
 
         // test client without cache
         let client = HttpChainClient::new(
@@ -313,7 +314,7 @@ mod tests {
             .create_async()
             .await;
 
-        let unchained_chain = Chain::new(&valid_server.url());
+        let unchained_chain: Chain = valid_server.url().as_str().try_into().unwrap();
 
         // test client without cache
         let unchained_info = unchained_chain_info();
