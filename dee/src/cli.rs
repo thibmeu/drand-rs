@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueHint};
+use drand_core::chain;
 
 /// 1. First interaction
 /// drand get --url https://drand.cloudflare.com # latest beacon
@@ -50,7 +51,7 @@ pub enum Commands {
         #[arg(short, long, group = "action")]
         decrypt: bool,
         /// Set default upstream. If empty, use the latest upstream.
-        #[arg(short = 'u', long, value_hint = ValueHint::Url)]
+        #[arg(short = 'u', long)]
         set_upstream: Option<String>,
         /// Encrypt to the specified ROUND.
         /// ROUND can be:
@@ -80,7 +81,7 @@ pub enum Commands {
     #[command(verbatim_doc_comment)]
     Rand {
         /// Set default upstream. If empty, use the lastest upstream.
-        #[arg(short = 'u', long, value_hint = ValueHint::Url)]
+        #[arg(short = 'u', long)]
         set_upstream: Option<String>,
         /// Enable beacon response validation.
         #[arg(long, default_value_t = true)]
@@ -110,13 +111,21 @@ pub enum RemoteCommand {
     /// Add a remote named <name> for the chain at <URL>. The command dee rand -u <name> can then be used to create and update remote-tracking chain <name>.
     ///
     /// By default, only information on managed chains are imported.
-    Add { name: String, url: String },
+    Add {
+        name: String,
+        #[arg(value_hint = ValueHint::Url)]
+        url: chain::Chain,
+    },
     /// Rename the remote named <old> to <new>. The remote-tracking chain and configuration settings for the remote are updated.
     Rename { old: String, new: String },
     /// Remove the remote named <name>. The remote-tracking chain and configuration settings for the remote are removed.
     Remove { name: String },
     /// Change URLs for the remote.
-    SetUrl { name: String, url: String },
+    SetUrl {
+        name: String,
+        #[arg(value_hint = ValueHint::Url)]
+        url: chain::Chain,
+    },
     /// Give some information about the remote <name>.
     Show {
         /// Enable detailed output

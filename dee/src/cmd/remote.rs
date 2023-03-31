@@ -9,17 +9,15 @@ use crate::{
     print::{self, print_with_format},
 };
 
-pub async fn add(cfg: &mut config::Local, name: String, url: String) -> Result<String> {
+pub async fn add(cfg: &mut config::Local, name: String, chain: Chain) -> Result<String> {
     if cfg.chain(&name).is_some() {
         return Err(anyhow!("remote {name} already exists."));
     }
-    let chain = Chain::new(&url);
-    let info = chain
-        .info()
-        .await
-        .map_err(|_err| anyhow!("failed to retrieve information from remote '{}'", url))?;
+    let info = chain.info().await.map_err(|err| {
+        anyhow!("failed to retrieve information from remote '{name}'. server response: {err}")
+    })?;
 
-    cfg.add_chain(name.clone(), ConfigChain::new(url, info))?;
+    cfg.add_chain(name.clone(), ConfigChain::new(chain, info))?;
 
     Ok(name)
 }
@@ -52,11 +50,11 @@ pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<Strin
     Ok(new)
 }
 
-pub fn set_url(cfg: &mut config::Local, name: String, url: String) -> Result<String> {
+pub fn set_url(cfg: &mut config::Local, name: String, chain: Chain) -> Result<String> {
     if cfg.chain(&name).is_none() {
         return Err(anyhow!("no such remote '{name}'."));
     }
-    cfg.set_url_chain(name.clone(), url)?;
+    cfg.set_chain(name.clone(), chain)?;
 
     Ok(name)
 }
@@ -78,7 +76,7 @@ impl print::Print for ConfigChain {
 {: <10}: {}
 {: <10}: {}",
             "URL".bold(),
-            self.url(),
+            self.chain().base_url(),
             "Public Key".bold(),
             hex::encode(info.public_key()),
             "Period".bold(),
@@ -117,12 +115,12 @@ pub fn list(cfg: &config::Local) -> Result<String> {
     } else {
         let output: Vec<String> = chains
             .iter()
-            .map(|chain| (chain.to_owned(), cfg.chain(chain.as_str()).unwrap().url()))
-            .map(|(chain, url)| {
+            .map(|key| (key.to_owned(), cfg.chain(key.as_str()).unwrap().chain()))
+            .map(|(name, chain)| {
                 if log_enabled!(Level::Warn) {
-                    format!("{chain: <20}\t{url}")
+                    format!("{name: <20}\t{url}", url = chain.base_url())
                 } else {
-                    chain
+                    name
                 }
             })
             .collect();

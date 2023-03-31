@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use chrono::FixedOffset;
 use colored::Colorize;
-use drand_core::chain::{self, ChainInfo, ChainOptions};
+use drand_core::chain::{ChainInfo, ChainOptions};
 use drand_core::http_chain_client::HttpChainClient;
 use serde::{Deserialize, Serialize};
 
@@ -172,14 +172,13 @@ impl Print for RandomnessBeaconTime {
 }
 
 pub async fn round_from_option(
-    chain: ConfigChain,
+    config: ConfigChain,
     round: Option<String>,
 ) -> Result<RandomnessBeaconTime> {
-    let info = chain.info();
-    let chain = chain::Chain::new(&chain.url());
+    let info = config.info();
 
     let client = HttpChainClient::new(
-        chain,
+        config.chain(),
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
     );
 

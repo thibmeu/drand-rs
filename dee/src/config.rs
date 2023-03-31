@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 
-use drand_core::chain::ChainInfo;
+use drand_core::chain::{Chain, ChainInfo};
 use serde::{Deserialize, Serialize};
 
 pub type Chains = HashMap<String, ConfigChain>;
@@ -66,9 +66,9 @@ impl Local {
         }
     }
 
-    pub fn set_url_chain(&mut self, name: String, url: String) -> Result<()> {
+    pub fn set_chain(&mut self, name: String, chain: Chain) -> Result<()> {
         if let Some(v) = self.chains.get_mut(&name) {
-            v.url = url;
+            v.chain = chain;
             Ok(())
         } else {
             Err(anyhow!("no such remote '{name}'."))
@@ -107,17 +107,17 @@ impl From<Local> for Option<&str> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConfigChain {
-    url: String,
+    chain: Chain,
     info: ChainInfo,
 }
 
 impl ConfigChain {
-    pub fn new(url: String, info: ChainInfo) -> Self {
-        Self { url, info }
+    pub fn new(chain: Chain, info: ChainInfo) -> Self {
+        Self { chain, info }
     }
 
-    pub fn url(&self) -> String {
-        self.url.clone()
+    pub fn chain(&self) -> Chain {
+        self.chain.clone()
     }
 
     pub fn info(&self) -> ChainInfo {

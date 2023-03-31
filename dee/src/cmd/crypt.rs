@@ -1,10 +1,7 @@
 use std::{fs, io};
 
 use anyhow::{anyhow, Result};
-use drand_core::{
-    chain::{self, ChainOptions},
-    http_chain_client::HttpChainClient,
-};
+use drand_core::{chain::ChainOptions, http_chain_client::HttpChainClient};
 
 use crate::{
     config::{self, ConfigChain},
@@ -36,15 +33,15 @@ pub async fn encrypt(
     output: Option<String>,
     input: Option<String>,
     armor: bool,
-    chain: ConfigChain,
+    config: ConfigChain,
     round: Option<String>,
 ) -> Result<String> {
-    let info = chain.info();
+    let info = config.info();
     if !info.is_unchained() {
         return Err(anyhow!("remote must use unchained signatures"));
     }
 
-    let beacon_time = crate::time::round_from_option(chain, round).await?;
+    let beacon_time = crate::time::round_from_option(config, round).await?;
 
     let src = file_or_stdin(input)?;
     let dst = file_or_stdout(output)?;
@@ -75,7 +72,7 @@ pub async fn decrypt(
     _cfg: &config::Local,
     output: Option<String>,
     input: Option<String>,
-    chain: ConfigChain,
+    config: ConfigChain,
 ) -> Result<String> {
     let mut src = ResetReader::new(file_or_stdin(input.clone())?);
     let header = tlock_age::decrypt_header(&mut src)?;
@@ -83,11 +80,10 @@ pub async fn decrypt(
     // This allows the same reader to be used twice.
     src.reset();
 
-    let info = chain.info();
-    let chain = chain::Chain::new(&chain.url());
+    let info = config.info();
 
     let client = HttpChainClient::new(
-        chain,
+        config.chain(),
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
     );
 

@@ -5,7 +5,7 @@ use anyhow::Result;
 use colored::Colorize;
 use drand_core::{
     beacon::RandomnessBeacon,
-    chain::{self, ChainOptions},
+    chain::{Chain, ChainOptions},
     http_chain_client::HttpChainClient,
 };
 use serde::{Deserialize, Serialize};
@@ -64,12 +64,12 @@ impl Print for RandResult {
 pub async fn rand(
     _cfg: &config::Local,
     format: Format,
-    chain: ConfigChain,
+    config: ConfigChain,
     beacon: Option<u64>,
     verify: bool,
 ) -> Result<String> {
-    let chain = chain::Chain::new(&chain.url());
-    let info = chain.info().await?;
+    let chain: Chain = config.chain();
+    let info = config.info();
 
     let client = HttpChainClient::new(
         chain,
