@@ -1,58 +1,68 @@
 use anyhow::{anyhow, Result};
-use std::sync::Mutex;
+use std::{str::FromStr, sync::Mutex};
 
 use crate::{
     beacon::RandomnessBeacon,
-    chain::{Chain, ChainInfo, ChainOptions},
+    chain::{ChainInfo, ChainOptions},
 };
 
 /// HTTP Client for drand
 /// Queries a specified HTTP endpoint given by `chain`, with specific `options`
 /// By default, the client verifies answers, and caches retrieved chain informations
 pub struct HttpChainClient {
-    chain: Chain,
+    base_url: url::Url,
     options: ChainOptions,
     cached_chain_info: Mutex<Option<ChainInfo>>,
     http_client: reqwest::Client,
 }
 
 impl HttpChainClient {
-    pub fn new(chain: Chain, options: Option<ChainOptions>) -> Self {
-        Self {
-            chain,
+    pub fn new(base_url: &str, options: Option<ChainOptions>) -> Result<Self> {
+        // The most common error is when user forget to add protocol in front of the provided URL string.
+        // The error provided by reqwest::Url is rather obscure when that happens.
+        let mut url = reqwest::Url::parse(base_url).map_err(|e| {
+            if e == url::ParseError::RelativeUrlWithoutBase {
+                anyhow!("{e}. You might need to add \"https://\" to the provided URL.")
+            } else {
+                anyhow!(e)
+            }
+        })?;
+        // Ensure base URL ends with a trailing slash.
+        // Given it's the base for API calls, it allows for easier joins in other methods.
+        if !url.path().ends_with('/') {
+            url.set_path(&format!("{}/", url.path()));
+        }
+        Ok(Self {
+            base_url: url,
             options: options.unwrap_or_default(),
             cached_chain_info: Mutex::new(None),
             http_client: reqwest::Client::builder().build().unwrap(),
-        }
+        })
     }
 
     async fn chain_info_no_cache(&self) -> Result<ChainInfo> {
-        let info = self.chain.info().await?;
-        match self.options().verify(info.clone()) {
+        let response = self
+            .http_client
+            .get(self.base_url.join("info")?)
+            .send()
+            .await?;
+        let info = match response.error_for_status_ref() {
+            Ok(_response) => response.json::<ChainInfo>().await?,
+            Err(_err) => {
+                return Err(anyhow!(
+                    "{}",
+                    response.text().await.map_err(|e| anyhow!(e))?
+                ))
+            }
+        };
+        match self.options().verify(&info) {
             true => Ok(info),
             false => Err(anyhow!("Chain info is invalid")),
         }
     }
 
-    async fn chain_info(&self) -> Result<ChainInfo> {
-        if self.options().is_cache() {
-            let cached = self.cached_chain_info.lock().unwrap().to_owned();
-            match cached {
-                Some(info) => Ok(info),
-                None => {
-                    let info = self.chain_info_no_cache().await?;
-                    *self.cached_chain_info.lock().unwrap() = Some(info.clone());
-                    Ok(info)
-                }
-            }
-        } else {
-            self.chain_info_no_cache().await
-        }
-    }
-
     fn beacon_url(&self, round: String) -> Result<reqwest::Url> {
-        let url: reqwest::Url = self.chain.base_url().as_str().try_into()?;
-        let mut url = url.join(&format!("public/{round}"))?;
+        let mut url = self.base_url.join(&format!("public/{round}"))?;
         if !self.options().is_cache() {
             url.query_pairs_mut()
                 .append_key_only(format!("{}", rand::random::<u64>()).as_str());
@@ -71,8 +81,28 @@ impl HttpChainClient {
         }
     }
 
+    pub fn base_url(&self) -> String {
+        self.base_url.to_string()
+    }
+
     pub fn options(&self) -> ChainOptions {
         self.options.clone()
+    }
+
+    pub async fn chain_info(&self) -> Result<ChainInfo> {
+        if self.options().is_cache() {
+            let cached = self.cached_chain_info.lock().unwrap().to_owned();
+            match cached {
+                Some(info) => Ok(info),
+                None => {
+                    let info = self.chain_info_no_cache().await?;
+                    *self.cached_chain_info.lock().unwrap() = Some(info.clone());
+                    Ok(info)
+                }
+            }
+        } else {
+            self.chain_info_no_cache().await
+        }
     }
 
     pub async fn latest(&self) -> Result<RandomnessBeacon> {
@@ -98,15 +128,21 @@ impl HttpChainClient {
 
         self.verify_beacon(beacon).await
     }
+}
 
-    pub fn chain(&self) -> Chain {
-        self.chain.clone()
+impl TryFrom<&str> for HttpChainClient {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+        Self::from_str(value)
     }
 }
 
-impl From<Chain> for HttpChainClient {
-    fn from(value: Chain) -> Self {
-        Self::new(value, None)
+impl FromStr for HttpChainClient {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Self::new(s, None)
     }
 }
 
@@ -114,8 +150,7 @@ impl From<Chain> for HttpChainClient {
 mod tests {
     use crate::beacon::{tests::chained_beacon, tests::invalid_beacon, tests::unchained_beacon};
     use crate::chain::{
-        tests::chained_chain_info, tests::unchained_chain_info, Chain, ChainOptions,
-        ChainVerification,
+        tests::chained_chain_info, tests::unchained_chain_info, ChainOptions, ChainVerification,
     };
 
     use super::*;
@@ -142,11 +177,12 @@ mod tests {
             .create_async()
             .await;
 
-        let chain: Chain = server.url().as_str().try_into().unwrap();
-
         // test client without cache
-        let no_cache_client =
-            HttpChainClient::new(chain.clone(), Some(ChainOptions::new(true, false, None)));
+        let no_cache_client = HttpChainClient::new(
+            server.url().as_str(),
+            Some(ChainOptions::new(true, false, None)),
+        )
+        .unwrap();
 
         // info endpoint
         let info = match no_cache_client.chain_info().await {
@@ -191,11 +227,12 @@ mod tests {
             .create_async()
             .await;
 
-        let chain: Chain = server.url().as_str().try_into().unwrap();
-
         // test client with cache
-        let cache_client =
-            HttpChainClient::new(chain.clone(), Some(ChainOptions::new(true, true, None)));
+        let cache_client = HttpChainClient::new(
+            server.url().as_str(),
+            Some(ChainOptions::new(true, true, None)),
+        )
+        .unwrap();
 
         // info endpoint
         let info = match cache_client.chain_info().await {
@@ -241,13 +278,12 @@ mod tests {
             .create_async()
             .await;
 
-        let valid_chain: Chain = valid_server.url().as_str().try_into().unwrap();
-
         // test client without cache
         let client = HttpChainClient::new(
-            valid_chain.clone(),
+            valid_server.url().as_str(),
             Some(ChainOptions::new(true, false, None)),
-        );
+        )
+        .unwrap();
 
         // latest endpoint
         let latest = match client.latest().await {
@@ -276,13 +312,12 @@ mod tests {
             .create_async()
             .await;
 
-        let invalid_chain: Chain = invalid_server.url().as_str().try_into().unwrap();
-
         // test client without cache
         let client = HttpChainClient::new(
-            invalid_chain.clone(),
+            invalid_server.url().as_str(),
             Some(ChainOptions::new(true, false, None)),
-        );
+        )
+        .unwrap();
 
         // latest endpoint
         match client.latest().await {
@@ -314,12 +349,10 @@ mod tests {
             .create_async()
             .await;
 
-        let unchained_chain: Chain = valid_server.url().as_str().try_into().unwrap();
-
         // test client without cache
         let unchained_info = unchained_chain_info();
         let unchained_client = HttpChainClient::new(
-            unchained_chain.clone(),
+            valid_server.url().as_str(),
             Some(ChainOptions::new(
                 true,
                 false,
@@ -328,7 +361,8 @@ mod tests {
                     Some(unchained_info.public_key()),
                 )),
             )),
-        );
+        )
+        .unwrap();
 
         // latest endpoint
         let latest = match unchained_client.latest().await {
@@ -340,13 +374,14 @@ mod tests {
         // test with not the correct hash
         let chained_info = chained_chain_info();
         let invalid_client = HttpChainClient::new(
-            unchained_chain.clone(),
+            valid_server.url().as_str(),
             Some(ChainOptions::new(
                 true,
                 false,
                 Some(ChainVerification::new(Some(chained_info.hash()), None)),
             )),
-        );
+        )
+        .unwrap();
 
         match invalid_client.latest().await {
             Ok(_beacon) => panic!("Beacon should not validate"),
@@ -355,7 +390,7 @@ mod tests {
         // test with not the correct public_key
         let chained_info = chained_chain_info();
         let invalid_client = HttpChainClient::new(
-            unchained_chain.clone(),
+            valid_server.url().as_str(),
             Some(ChainOptions::new(
                 true,
                 false,
@@ -364,7 +399,8 @@ mod tests {
                     Some(chained_info.public_key()),
                 )),
             )),
-        );
+        )
+        .unwrap();
 
         match invalid_client.latest().await {
             Ok(_beacon) => panic!("Beacon should not validate"),

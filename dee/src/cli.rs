@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand, ValueHint};
-use drand_core::chain;
 
 /// 1. First interaction
 /// drand get --url https://drand.cloudflare.com # latest beacon
@@ -114,7 +113,7 @@ pub enum RemoteCommand {
     Add {
         name: String,
         #[arg(value_hint = ValueHint::Url)]
-        url: chain::Chain,
+        url: String,
     },
     /// Rename the remote named <old> to <new>. The remote-tracking chain and configuration settings for the remote are updated.
     Rename { old: String, new: String },
@@ -124,7 +123,7 @@ pub enum RemoteCommand {
     SetUrl {
         name: String,
         #[arg(value_hint = ValueHint::Url)]
-        url: chain::Chain,
+        url: String,
     },
     /// Give some information about the remote <name>.
     Show {

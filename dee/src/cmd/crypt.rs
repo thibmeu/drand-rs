@@ -33,15 +33,15 @@ pub async fn encrypt(
     output: Option<String>,
     input: Option<String>,
     armor: bool,
-    config: ConfigChain,
+    chain: ConfigChain,
     round: Option<String>,
 ) -> Result<String> {
-    let info = config.info();
+    let info = chain.info();
     if !info.is_unchained() {
         return Err(anyhow!("remote must use unchained signatures"));
     }
 
-    let beacon_time = crate::time::round_from_option(config, round).await?;
+    let beacon_time = crate::time::round_from_option(&chain, round).await?;
 
     let src = file_or_stdin(input)?;
     let dst = file_or_stdout(output)?;
@@ -72,7 +72,7 @@ pub async fn decrypt(
     _cfg: &config::Local,
     output: Option<String>,
     input: Option<String>,
-    config: ConfigChain,
+    chain: ConfigChain,
 ) -> Result<String> {
     let mut src = ResetReader::new(file_or_stdin(input.clone())?);
     let header = tlock_age::decrypt_header(&mut src)?;
@@ -80,12 +80,12 @@ pub async fn decrypt(
     // This allows the same reader to be used twice.
     src.reset();
 
-    let info = config.info();
+    let info = chain.info();
 
     let client = HttpChainClient::new(
-        config.chain(),
+        &chain.url(),
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
-    );
+    )?;
 
     let time = RandomnessBeaconTime::from_round(&info, header.round());
 

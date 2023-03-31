@@ -49,12 +49,12 @@ async fn main() {
         cli::Commands::Remote { command } => match command {
             Some(command) => match command {
                 cli::RemoteCommand::Add { name, url } => {
-                    cmd::remote::add(&mut cfg, name, url).await
+                    cmd::remote::add(&mut cfg, name, &url).await
                 }
                 cli::RemoteCommand::Remove { name } => cmd::remote::remove(&mut cfg, name),
                 cli::RemoteCommand::Rename { old, new } => cmd::remote::rename(&mut cfg, old, new),
                 cli::RemoteCommand::SetUrl { name, url } => {
-                    cmd::remote::set_url(&mut cfg, name, url)
+                    cmd::remote::set_url(&mut cfg, name, &url)
                 }
                 cli::RemoteCommand::Show { long, json, name } => cmd::remote::show(
                     &cfg,

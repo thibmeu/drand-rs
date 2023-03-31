@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use chrono::{TimeZone, Utc};
 use colored::Colorize;
-use drand_core::chain::Chain;
+use drand_core::http_chain_client::HttpChainClient;
 use log::{log_enabled, Level};
 
 use crate::{
@@ -9,15 +9,16 @@ use crate::{
     print::{self, print_with_format},
 };
 
-pub async fn add(cfg: &mut config::Local, name: String, chain: Chain) -> Result<String> {
+pub async fn add(cfg: &mut config::Local, name: String, url: &str) -> Result<String> {
     if cfg.chain(&name).is_some() {
         return Err(anyhow!("remote {name} already exists."));
     }
-    let info = chain.info().await.map_err(|err| {
+    let client: HttpChainClient = url.try_into()?;
+    let info = client.chain_info().await.map_err(|err| {
         anyhow!("failed to retrieve information from remote '{name}'. server response: {err}")
     })?;
 
-    cfg.add_chain(name.clone(), ConfigChain::new(chain, info))?;
+    cfg.add_chain(name.clone(), ConfigChain::new(url, info))?;
 
     Ok(name)
 }
@@ -50,11 +51,11 @@ pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<Strin
     Ok(new)
 }
 
-pub fn set_url(cfg: &mut config::Local, name: String, chain: Chain) -> Result<String> {
+pub fn set_url(cfg: &mut config::Local, name: String, url: &str) -> Result<String> {
     if cfg.chain(&name).is_none() {
         return Err(anyhow!("no such remote '{name}'."));
     }
-    cfg.set_chain(name.clone(), chain)?;
+    cfg.set_url_chain(name.clone(), url)?;
 
     Ok(name)
 }
@@ -76,7 +77,7 @@ impl print::Print for ConfigChain {
 {: <10}: {}
 {: <10}: {}",
             "URL".bold(),
-            self.chain().base_url(),
+            self.url(),
             "Public Key".bold(),
             hex::encode(info.public_key()),
             "Period".bold(),
@@ -115,10 +116,10 @@ pub fn list(cfg: &config::Local) -> Result<String> {
     } else {
         let output: Vec<String> = chains
             .iter()
-            .map(|key| (key.to_owned(), cfg.chain(key.as_str()).unwrap().chain()))
+            .map(|key| (key.to_owned(), cfg.chain(key.as_str()).unwrap()))
             .map(|(name, chain)| {
                 if log_enabled!(Level::Warn) {
-                    format!("{name: <20}\t{url}", url = chain.base_url())
+                    format!("{name: <20}\t{url}", url = chain.url())
                 } else {
                     name
                 }

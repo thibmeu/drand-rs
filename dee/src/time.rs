@@ -172,15 +172,15 @@ impl Print for RandomnessBeaconTime {
 }
 
 pub async fn round_from_option(
-    config: ConfigChain,
+    chain: &ConfigChain,
     round: Option<String>,
 ) -> Result<RandomnessBeaconTime> {
-    let info = config.info();
+    let info = chain.info();
 
     let client = HttpChainClient::new(
-        config.chain(),
+        &chain.url(),
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
-    );
+    )?;
 
     let round = match round {
         Some(round) => round,

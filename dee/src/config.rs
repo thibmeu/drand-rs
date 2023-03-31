@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 
-use drand_core::chain::{Chain, ChainInfo};
+use drand_core::chain::ChainInfo;
 use serde::{Deserialize, Serialize};
 
 pub type Chains = HashMap<String, ConfigChain>;
@@ -58,44 +58,44 @@ impl Local {
     }
 
     pub fn rename_chain(&mut self, old: String, new: String) -> Result<()> {
-        if let Some(v) = self.chains.remove(&old) {
-            self.chains.insert(new, v);
-            Ok(())
-        } else {
-            Err(anyhow!("no such remote '{old}'."))
-        }
+        self.chains
+            .remove(&old)
+            .map(|v| {
+                self.chains.insert(new, v);
+            })
+            .ok_or(anyhow!("no such remote '{old}'."))
     }
 
-    pub fn set_chain(&mut self, name: String, chain: Chain) -> Result<()> {
-        if let Some(v) = self.chains.get_mut(&name) {
-            v.chain = chain;
-            Ok(())
-        } else {
-            Err(anyhow!("no such remote '{name}'."))
-        }
+    pub fn set_url_chain(&mut self, name: String, url: &str) -> Result<()> {
+        self.chains
+            .get_mut(&name)
+            .map(|v| {
+                v.url = url.to_string();
+            })
+            .ok_or(anyhow!("no such remote '{name}'."))
     }
 
     pub fn set_upstream(&mut self, upstream: &str) -> Result<()> {
-        if self.chains.get(upstream).is_some() {
-            self.upstream = Some(upstream.to_owned());
-            Ok(())
-        } else {
-            Err(anyhow!("no such remote '{upstream}'."))
-        }
+        self.chains
+            .get(upstream)
+            .map(|_| {
+                self.upstream = Some(upstream.to_owned());
+            })
+            .ok_or(anyhow!("no such remote '{upstream}'."))
     }
 
     pub fn set_upstream_and_chain(&mut self, set_upstream: Option<String>) -> Result<ConfigChain> {
-        let chain = match set_upstream {
-            Some(upstream) => {
-                self.set_upstream(&upstream)?;
+        let chain = set_upstream
+            .map(|upstream| {
+                self.set_upstream(&upstream).unwrap();
                 upstream
-            }
-            None => match self.upstream() {
-                Some(upstream) => upstream,
-                None => return Err(anyhow!("No upstream")),
-            },
-        };
-        Ok(self.chain(&chain).unwrap())
+            })
+            .or(self.upstream());
+
+        match chain {
+            Some(chain) => Ok(self.chain(&chain).unwrap()),
+            None => Err(anyhow!("No upstream")),
+        }
     }
 }
 
@@ -107,17 +107,20 @@ impl From<Local> for Option<&str> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConfigChain {
-    chain: Chain,
+    url: String,
     info: ChainInfo,
 }
 
 impl ConfigChain {
-    pub fn new(chain: Chain, info: ChainInfo) -> Self {
-        Self { chain, info }
+    pub fn new(url: &str, info: ChainInfo) -> Self {
+        Self {
+            url: url.to_string(),
+            info,
+        }
     }
 
-    pub fn chain(&self) -> Chain {
-        self.chain.clone()
+    pub fn url(&self) -> String {
+        self.url.clone()
     }
 
     pub fn info(&self) -> ChainInfo {
