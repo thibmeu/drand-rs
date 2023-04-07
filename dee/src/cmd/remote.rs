@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
-use chrono::{TimeZone, Utc};
 use colored::Colorize;
 use drand_core::HttpClient;
 use log::{log_enabled, Level};
+use time::OffsetDateTime;
 
 use crate::{
     config::{self, ConfigChain},
@@ -83,7 +83,7 @@ impl print::Print for ConfigChain {
             "Period".bold(),
             info.period(),
             "Genesis".bold(),
-            Utc.timestamp_opt(info.genesis_time() as i64, 0).unwrap(),
+            OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap(),
             "Chain Hash".bold(),
             hex::encode(info.hash()),
             "Group Hash".bold(),

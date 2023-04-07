@@ -93,9 +93,9 @@ pub async fn decrypt(
         Ok(beacon) => beacon,
         Err(_) => {
             let relative = time.relative();
-            let seconds = relative.num_seconds().abs() % 60;
-            let minutes = relative.num_minutes().abs() % 60;
-            let hours = relative.num_hours().abs();
+            let seconds = relative.whole_seconds().abs() % 60;
+            let minutes = relative.whole_minutes().abs() % 60;
+            let hours = relative.whole_hours().abs();
             let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2}");
             return Err(anyhow!(
                 "Too early. Decryption round is {}, estimated in {} ({}).",

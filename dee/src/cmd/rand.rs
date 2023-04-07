@@ -24,10 +24,10 @@ impl Print for RandResult {
     }
     fn long(&self) -> Result<String> {
         let relative = self.time.relative();
-        let seconds = relative.num_seconds().abs() % 60;
-        let minutes = (relative.num_minutes()).abs() % 60;
-        let hours = relative.num_hours().abs();
-        let epoch = match relative.num_seconds().cmp(&0) {
+        let seconds = relative.whole_seconds().abs() % 60;
+        let minutes = (relative.whole_minutes()).abs() % 60;
+        let hours = relative.whole_hours().abs();
+        let epoch = match relative.whole_seconds().cmp(&0) {
             Ordering::Less => "ago",
             Ordering::Equal => "now",
             Ordering::Greater => "from now",

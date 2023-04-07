@@ -1,78 +1,35 @@
 use anyhow::{anyhow, Result};
-use chrono::FixedOffset;
 use colored::Colorize;
 use drand_core::chain::ChainInfo;
 use drand_core::{ChainOptions, HttpClient};
 use serde::{Deserialize, Serialize};
+use time::ext::NumericalDuration;
+use time::format_description::well_known::Rfc3339;
+use time::{Duration, OffsetDateTime};
 
 use crate::config::ConfigChain;
 use crate::print::Print;
 
-fn parse_duration(duration: &str) -> Result<chrono::Duration> {
+fn parse_duration(duration: &str) -> Result<Duration> {
     let l = duration.len() - 1;
     let principal = duration[0..l].parse::<i64>()?;
 
     let duration = match duration.chars().last().unwrap() {
-        's' => chrono::Duration::seconds(principal),
-        'm' => chrono::Duration::minutes(principal),
-        'h' => chrono::Duration::hours(principal),
-        'd' => chrono::Duration::days(principal),
+        's' => principal.seconds(),
+        'm' => principal.minutes(),
+        'h' => principal.hours(),
+        'd' => principal.days(),
         _ => return Err(anyhow!("cannot parse duration")),
     };
     Ok(duration)
 }
 
-mod date_format {
-    use chrono::NaiveDateTime;
-    use serde::{self, Deserialize, Deserializer, Serializer};
-
-    const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
-
-    pub fn serialize<S>(date: &NaiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        chrono::NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
-    }
-}
-
-mod duration_format {
-    use chrono::Duration;
-    use serde::{self, Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let s = format!("{}", duration.num_seconds());
-        serializer.serialize_str(&s)
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        super::parse_duration(&s).map_err(serde::de::Error::custom)
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RandomnessBeaconTime {
     round: u64,
-    #[serde(with = "duration_format")]
-    relative: chrono::Duration,
-    #[serde(with = "date_format")]
-    absolute: chrono::NaiveDateTime,
+    relative: Duration,
+    #[serde(with = "time::serde::rfc3339")]
+    absolute: OffsetDateTime,
 }
 
 impl RandomnessBeaconTime {
@@ -80,7 +37,7 @@ impl RandomnessBeaconTime {
         match (
             round.parse::<u64>(),
             parse_duration(round),
-            chrono::DateTime::parse_from_rfc3339(round),
+            OffsetDateTime::parse(round, &Rfc3339),
         ) {
             (Ok(round), Err(_), Err(_)) => Self::from_round(info, round),
             (Err(_), Ok(relative), Err(_)) => Self::from_duration(info, relative),
@@ -93,19 +50,19 @@ impl RandomnessBeaconTime {
         self.round
     }
 
-    pub fn relative(&self) -> chrono::Duration {
+    pub fn relative(&self) -> Duration {
         self.relative
     }
 
-    pub fn absolute(&self) -> chrono::NaiveDateTime {
+    pub fn absolute(&self) -> OffsetDateTime {
         self.absolute
     }
 
     pub fn from_round(info: &ChainInfo, round: u64) -> Self {
-        let genesis =
-            chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
-        let absolute = genesis + chrono::Duration::seconds(((round - 1) * info.period()) as i64);
-        let relative = absolute - chrono::Utc::now().naive_utc();
+        let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
+
+        let absolute = genesis + (((round - 1) * info.period()) as i64).seconds();
+        let relative = absolute - OffsetDateTime::now_utc();
         Self {
             round,
             relative,
@@ -113,12 +70,11 @@ impl RandomnessBeaconTime {
         }
     }
 
-    fn from_duration(info: &ChainInfo, relative: chrono::Duration) -> Self {
-        let genesis =
-            chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
+    fn from_duration(info: &ChainInfo, relative: Duration) -> Self {
+        let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
 
-        let absolute = chrono::Utc::now().naive_utc() + relative;
-        let round = ((absolute - genesis).num_seconds() / (info.period() as i64) + 1) as u64;
+        let absolute = OffsetDateTime::now_utc() + relative;
+        let round = ((absolute - genesis).whole_seconds() / (info.period() as i64) + 1) as u64;
 
         Self {
             round,
@@ -127,17 +83,11 @@ impl RandomnessBeaconTime {
         }
     }
 
-    fn from_datetime(info: &ChainInfo, absolute: chrono::DateTime<FixedOffset>) -> Self {
-        let absolute = chrono::NaiveDateTime::from_timestamp_opt(
-            absolute.timestamp(),
-            absolute.timestamp_subsec_nanos(),
-        )
-        .unwrap();
-        let genesis =
-            chrono::NaiveDateTime::from_timestamp_opt(info.genesis_time() as i64, 0).unwrap();
+    fn from_datetime(info: &ChainInfo, absolute: OffsetDateTime) -> Self {
+        let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
 
-        let relative = absolute - chrono::Utc::now().naive_utc();
-        let round = ((absolute - genesis).num_seconds() / (info.period() as i64) + 1) as u64;
+        let relative = absolute - OffsetDateTime::now_utc();
+        let round = ((absolute - genesis).whole_seconds() / (info.period() as i64) + 1) as u64;
 
         Self {
             round,
@@ -162,7 +112,7 @@ impl Print for RandomnessBeaconTime {
             "Relative".bold(),
             self.relative(),
             "Absolute".bold(),
-            self.absolute().format("%Y-%m-%d %H:%M:%S"),
+            self.absolute().format(&Rfc3339)?,
         ))
     }
 
