@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use colored::Colorize;
 use drand_core::{beacon::RandomnessBeacon, ChainOptions, HttpClient};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::{
     config::{self, ConfigChain},
@@ -12,7 +12,7 @@ use crate::{
     time::RandomnessBeaconTime,
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 struct RandResult {
     beacon: RandomnessBeacon,
     time: RandomnessBeaconTime,

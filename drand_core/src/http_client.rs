@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use std::{str::FromStr, sync::Mutex};
 
 use crate::{
-    beacon::RandomnessBeacon,
+    beacon::{ApiBeacon, RandomnessBeacon},
     chain::{ChainInfo, ChainOptions},
 };
 
@@ -106,13 +106,19 @@ impl HttpClient {
     }
 
     pub async fn latest(&self) -> Result<RandomnessBeacon> {
+        // it is possible to either use round number 0, or to infer the round number based on the current time
+        // however, to match the existing endpoint API, using latest independantly seems to be the best approach
         let beacon = self
             .http_client
             .get(self.beacon_url("latest".to_string())?)
             .send()
             .await?
-            .json::<RandomnessBeacon>()
+            .json::<ApiBeacon>()
             .await?;
+
+        let info = self.chain_info().await?;
+        let unix_time = info.genesis_time() + beacon.round() * info.period();
+        let beacon = RandomnessBeacon::new(beacon, unix_time);
 
         self.verify_beacon(beacon).await
     }
@@ -123,10 +129,21 @@ impl HttpClient {
             .get(self.beacon_url(round_number.to_string())?)
             .send()
             .await?
-            .json::<RandomnessBeacon>()
+            .json::<ApiBeacon>()
             .await?;
 
+        let info = self.chain_info().await?;
+        let unix_time = info.genesis_time() + beacon.round() * info.period();
+        let beacon = RandomnessBeacon::new(beacon, unix_time);
+
         self.verify_beacon(beacon).await
+    }
+
+    pub async fn get_by_unix_time(&self, round_unix_time: u64) -> Result<RandomnessBeacon> {
+        let info = self.chain_info().await?;
+        let round = (round_unix_time - info.genesis_time()) / info.period();
+
+        self.get(round).await
     }
 }
 
@@ -199,7 +216,8 @@ mod tests {
             Ok(beacon) => beacon,
             Err(_err) => panic!("fetch should have succeded"),
         };
-        assert_eq!(latest, chained_beacon());
+        assert_eq!(latest.beacon(), chained_beacon());
+        assert_eq!(latest.time(), 1625431050);
         // do it again to see if it's cached or not
         let _ = no_cache_client.latest().await;
         latest_mock.assert_async().await;
@@ -249,7 +267,8 @@ mod tests {
             Ok(beacon) => beacon,
             Err(_err) => panic!("fetch should have succeded"),
         };
-        assert_eq!(latest, chained_beacon());
+        assert_eq!(latest.beacon(), chained_beacon());
+        assert_eq!(latest.time(), 1625431050);
         // do it again to see if it's cached or not
         let _ = cache_client.latest().await;
         latest_mock.assert_async().await;
@@ -290,7 +309,7 @@ mod tests {
             Ok(beacon) => beacon,
             Err(err) => panic!("fetch should have succeded {}", err),
         };
-        assert_eq!(latest, unchained_beacon());
+        assert_eq!(latest.beacon(), unchained_beacon());
 
         let mut invalid_server = mockito::Server::new_async().await;
         let _info_mock = invalid_server
@@ -369,7 +388,8 @@ mod tests {
             Ok(beacon) => beacon,
             Err(err) => panic!("fetch should have succeded {}", err),
         };
-        assert_eq!(latest, unchained_beacon());
+        assert_eq!(latest.beacon(), unchained_beacon());
+        assert_eq!(latest.time(), 1654677099);
 
         // test with not the correct hash
         let chained_info = chained_chain_info();
