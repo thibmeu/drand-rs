@@ -6,9 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.7] - 2023-04-10
+
+### Added
+
+- Add documentation for design considerations
+
 ### Changed
 
+- Update dependencies
+- Update time library from chrono to time
+- Update dee error handling on HTTP remotes
 - Update tlock_age to v0.0.2 for improved performance
+
+### Fix
+
+- Fix Chain error handling on wrong URL string
 
 ## [0.0.6] - 2023-03-22
 
