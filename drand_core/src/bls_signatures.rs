@@ -14,30 +14,36 @@ use ark_ec::{
 use ark_ff::{field_hashers::DefaultFieldHasher, Zero};
 use ark_serialize::CanonicalDeserialize;
 
-const DOMAIN: &[u8] = b"BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
+pub const G1_DOMAIN: &[u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_";
+pub const G2_DOMAIN: &[u8] = b"BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_";
 
 /// Check that signature is the actual aggregate of message and public key.
 /// Calculated by `e(g2, signature) == e(pk, hash)`.
 /// `signature` and `hash` are on G2, `public_key` is on G1.
-pub fn verify(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
+pub fn verify(dst: &[u8], signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
     // 48 is bytes of G1
     // G1Affine::identity().to_compressed().len()
     if signature.len() == 48 {
-        verify_g1_on_g2(signature, hash, public_key)
+        verify_g1_on_g2(dst, signature, hash, public_key)
     } else {
-        verify_g2_on_g1(signature, hash, public_key)
+        verify_g2_on_g1(dst, signature, hash, public_key)
     }
 }
 
 /// Check that signature is the actual aggregate of message and public key.
 /// Calculated by `e(g2, signature) == e(pk, hash)`.
 /// `signature` and `hash` are on G2, `public_key` is on G1.
-pub fn verify_g2_on_g1(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
+pub fn verify_g2_on_g1(
+    dst: &[u8],
+    signature: &[u8],
+    hash: &[u8],
+    public_key: &[u8],
+) -> Result<bool> {
     let mapper = MapToCurveBasedHasher::<
         short_weierstrass::Projective<g2::Config>,
         DefaultFieldHasher<sha2::Sha256, 128>,
         WBMap<g2::Config>,
-    >::new(DOMAIN)
+    >::new(dst)
     .map_err(|_| anyhow!("cannot initialise mapper for sha2 to BLS12-381 G1"))?;
     let hash_on_curve = G2Projective::from(
         mapper
@@ -55,12 +61,17 @@ pub fn verify_g2_on_g1(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Resu
 /// Check that signature is the actual aggregate of message and public key.
 /// Calculated by `e(g1, signature) == e(pk, hash)`.
 /// `signature` is on G1, `public_key` and `hash` are on G2.
-pub fn verify_g1_on_g2(signature: &[u8], hash: &[u8], public_key: &[u8]) -> Result<bool> {
+pub fn verify_g1_on_g2(
+    dst: &[u8],
+    signature: &[u8],
+    hash: &[u8],
+    public_key: &[u8],
+) -> Result<bool> {
     let mapper = MapToCurveBasedHasher::<
         short_weierstrass::Projective<g1::Config>,
         DefaultFieldHasher<sha2::Sha256, 128>,
         WBMap<g1::Config>,
-    >::new(DOMAIN)
+    >::new(dst)
     .map_err(|_| anyhow!("cannot initialise mapper for sha2 to BLS12-381 G1"))?;
     let hash_on_curve = G1Projective::from(
         mapper

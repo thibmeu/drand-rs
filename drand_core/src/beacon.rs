@@ -29,10 +29,6 @@ impl RandomnessBeacon {
         self.beacon.randomness()
     }
 
-    pub fn scheme_id(&self) -> String {
-        self.beacon.scheme_id()
-    }
-
     pub fn is_unchained(&self) -> bool {
         self.beacon.is_unchained()
     }
@@ -62,12 +58,18 @@ pub enum ApiBeacon {
 
 impl ApiBeacon {
     pub fn verify(&self, info: ChainInfo) -> Result<bool> {
-        if self.scheme_id() != info.scheme_id() {
+        if self.is_unchained() != info.is_unchained()
+            || self.is_g1() && !info.scheme_id().contains("g1")
+        {
             return Ok(false);
         }
 
-        let signature_verify =
-            crate::bls_signatures::verify(&self.signature(), &self.message()?, &info.public_key())?;
+        let signature_verify = crate::bls_signatures::verify(
+            self.dst(&info),
+            &self.signature(),
+            &self.message()?,
+            &info.public_key(),
+        )?;
 
         let mut hasher = Sha256::new();
         hasher.update(self.signature());
@@ -91,22 +93,27 @@ impl ApiBeacon {
         }
     }
 
-    pub fn scheme_id(&self) -> String {
-        match self {
-            Self::ChainedBeacon(_) => "pedersen-bls-chained",
-            Self::UnchainedBeacon(unchained) => {
-                if unchained.signature.len() == 48 {
-                    "bls-unchained-on-g1"
-                } else {
-                    "pedersen-bls-unchained"
-                }
-            }
+    fn dst(&self, info: &ChainInfo) -> &[u8] {
+        // Name of the HashToCurve RFC compliant scheme has been decided upon in https://github.com/drand/drand/pull/1249
+        if info.scheme_id() == "bls-unchained-g1-rfc" {
+            crate::bls_signatures::G1_DOMAIN
+        } else {
+            crate::bls_signatures::G2_DOMAIN
         }
-        .to_string()
     }
 
     pub fn is_unchained(&self) -> bool {
-        self.scheme_id().contains("unchained")
+        match self {
+            Self::ChainedBeacon(_) => false,
+            Self::UnchainedBeacon(_) => true,
+        }
+    }
+
+    fn is_g1(&self) -> bool {
+        match self {
+            Self::ChainedBeacon(_) => false,
+            Self::UnchainedBeacon(unchained) => unchained.signature.len() == 48,
+        }
     }
 
     pub fn signature(&self) -> Vec<u8> {
@@ -197,7 +204,7 @@ impl Message for UnchainedBeacon {
 pub mod tests {
     use crate::chain::{
         tests::chained_chain_info,
-        tests::{unchained_chain_info, unchained_chain_on_g1_info},
+        tests::{unchained_chain_info, unchained_chain_on_g1_info, unchained_chain_on_g1_rfc_info},
     };
 
     use super::*;
@@ -237,6 +244,15 @@ pub mod tests {
             "round": 100000,
             "randomness": "37aa25aa1e0b52440502e6f841c956bf72d693770a511e59768ecb7777c172ce",
             "signature": "b370f411d5479fc342b504347226e4b543fee28698fa721876d55d36c12a20f3f49b7abd31ee99979e2d28e14f1d3152"
+        }"#).unwrap()
+    }
+
+    /// From drand Slack https://drandworkspace.slack.com/archives/C02FWA217GF/p1686583505902169
+    pub fn unchained_beacon_on_g1_rfc() -> ApiBeacon {
+        serde_json::from_str(r#"{
+            "round": 3,
+            "randomness":"9e9829dfb34bd8db3e21c28e13aefecd86e007ebd19d6bb8a5cee99c0a34798f",
+            "signature":"b98dae74f6a9d2ec79d75ba273dcfda86a45d589412860eb4c0fd056b00654dbf667c1b6884987c9aee0d43f8ba9db52"
         }"#).unwrap()
     }
 
@@ -302,6 +318,11 @@ pub mod tests {
             Ok(ok) => assert!(ok),
             Err(_err) => panic!("Unchained beacon on G1 should validate on unchained info"),
         }
+
+        match unchained_beacon_on_g1_rfc().verify(unchained_chain_on_g1_rfc_info()) {
+            Ok(ok) => assert!(ok),
+            Err(_err) => panic!("Unchained beacon on G1 RFC should validate on unchained info"),
+        }
     }
 
     #[test]
@@ -322,6 +343,22 @@ pub mod tests {
             Ok(ok) => assert!(!ok, "Unchained beacon on G1 should not validate on chained info"),
             Err(_err) => panic!(
                 "Unchained beacon on G1 should not validate on chained info without returning an error"
+            ),
+        }
+
+        // Regression test to confirm the introduction of RFC compliant chain does not break existing integration
+        // Original change is on [drand/drand#1249](https://github.com/drand/drand/pull/1249)
+        match unchained_beacon_on_g1().verify(unchained_chain_on_g1_rfc_info()) {
+            Ok(ok) => assert!(!ok, "Unchained beacon on G1 (not RFC compliant) should not validate on unchained compliant info"),
+            Err(_err) => panic!(
+                "Unchained beacon on G1 (non Hash to curve RFC compliant) should not validate on unchained G1 info without returning an error"
+            ),
+        }
+
+        match unchained_beacon_on_g1_rfc().verify(unchained_chain_on_g1_info()) {
+            Ok(ok) => assert!(!ok, "Unchained beacon on G1 should not validate on unchained G1 (non Hash to curve RFC compliant) info"),
+            Err(_err) => panic!(
+                "Unchained beacon on G1 should not validate on unchained G1 (non Hash to curve RFC compliant) info without returning an error"
             ),
         }
     }
