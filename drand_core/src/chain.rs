@@ -241,6 +241,21 @@ pub mod tests {
         }"#).unwrap()
     }
 
+    /// From drand Slack https://drandworkspace.slack.com/archives/C02FWA217GF/p1686583505902169
+    pub fn unchained_chain_on_g1_rfc_info() -> ChainInfo {
+        serde_json::from_str(r#"{
+            "public_key": "a1ee12542360bf75742bcade13d6134e7d5283d9eb782887c47d3d9725f05805d37b0106b7f744395bf82c175dd7434a169e998f188a657a030d588892c0cd2c01f996aaf331c4d8bc5b9734bbe261d09e7d2d39ef88b635077f262bd7bbb30f",
+            "period": 3,
+            "genesis_time": 1677685200,
+            "hash": "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493",
+            "groupHash": "a81e9d63f614ccdb144b8ff79fbd4d5a2d22055c0bfe4ee9a8092003dab1c6c0",
+            "schemeID": "bls-unchained-g1-rfc",
+            "metadata": {
+              "beaconID": "does-not-exist-slacn"
+            }
+        }"#).unwrap()
+    }
+
     #[test]
     fn chain_verification_success_works() {
         // Full validation should pass
