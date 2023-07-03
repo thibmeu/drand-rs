@@ -76,7 +76,7 @@ pub enum Commands {
     ///
     /// Example:
     ///     $ dee rand -u myremote 1000
-    ///     $ dee rand -f long
+    ///     $ dee rand -l
     #[command(verbatim_doc_comment)]
     Rand {
         /// Set default upstream. If empty, use the lastest upstream.
