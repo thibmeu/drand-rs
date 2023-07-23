@@ -66,6 +66,7 @@ pub async fn encrypt(
         )
     }
     .map(|()| String::from(""))
+    .map_err(|err| anyhow!(err))
 }
 
 pub async fn decrypt(
@@ -107,7 +108,9 @@ pub async fn decrypt(
     };
 
     let dst = file_or_stdout(output)?;
-    tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature()).map(|()| String::from(""))
+    tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature())
+        .map(|()| String::from(""))
+        .map_err(|err| anyhow!(err))
 }
 
 // Reader buffering every read, and with the ability to re-read what's been read already.

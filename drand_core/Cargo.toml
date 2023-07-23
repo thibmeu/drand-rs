@@ -12,25 +12,25 @@ categories = ["cryptography"]
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.70"
+anyhow = "1.0.72"
 ark-bls12-381 = "0.4.0"
 ark-ec = "0.4.2"
 ark-ff = "0.4.2"
 ark-serialize = "0.4.2"
-async-trait = "0.1.68"
+async-trait = "0.1.72"
 hex = { version = "0.4.3", features = ["serde"] }
 rand = "0.8.5"
-reqwest = { version = "0.11.16", default-features = false, features = ["json", "rustls-tls"] }
-serde = { version = "1.0.159", features = ["derive", "rc"] }
-serde_json = "1.0.95"
-sha2 = "0.10.6"
-url = { version = "2.3", features = ["serde"] }
+reqwest = { version = "0.11.18", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0.174", features = ["derive", "rc"] }
+serde_json = "1.0.103"
+sha2 = "0.10.7"
+url = { version = "2.4", features = ["serde"] }
 
 [target.'cfg(wasm32)'.dependencies]
-getrandom = { version = "0.2.9", features = ["js"] }
+getrandom = { version = "0.2.10", features = ["js"] }
 
 [dev-dependencies]
 hex-literal = "0.4.1"
-mockito = "1.0.2"
+mockito = "1.1.0"
 rand_chacha = "0.3.1"
-tokio = { version = "1.27.0", features = ["full"] }
+tokio = { version = "1.29.1", features = ["full"] }
