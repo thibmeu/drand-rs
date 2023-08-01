@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.9] - 2023-08-01
+
+### Changed
+
+- Update HTTP Client to use ureq
+
+### Fix
+
+- Fix unecessary ark_bls12_381 boilerplate
+- Fix G1 -> G2 in error messages
+
 ## [0.0.8] - 2023-07-23
 
 ### Added

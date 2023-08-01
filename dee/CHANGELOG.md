@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.9] - 2023-08-01
+
+### Fix
+
+- Fix GitHub Actions apt package install
+
 ## [0.0.8] - 2023-07-23
 
 ### Fix
