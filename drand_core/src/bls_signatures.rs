@@ -44,11 +44,11 @@ pub fn verify_g2_on_g1(
         DefaultFieldHasher<sha2::Sha256, 128>,
         WBMap<g2::Config>,
     >::new(dst)
-    .map_err(|_| anyhow!("cannot initialise mapper for sha2 to BLS12-381 G1"))?;
+    .map_err(|_| anyhow!("cannot initialise mapper for sha2 to BLS12-381 G2"))?;
     let hash_on_curve = G2Projective::from(
         mapper
             .hash(hash)
-            .map_err(|_| anyhow!("hash cannot be mapped to G1"))?,
+            .map_err(|_| anyhow!("hash cannot be mapped to G2"))?,
     )
     .into_affine();
 
