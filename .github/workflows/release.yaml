@@ -70,7 +70,7 @@ jobs:
         if: matrix.target != ''
 
       - name: Install linux build dependencies
-        run: sudo apt install ${{ matrix.build_deps }}
+        run: sudo apt update && sudo apt install ${{ matrix.build_deps }}
         if: matrix.build_deps != ''
 
       - name: Set up .cargo/config
@@ -151,7 +151,7 @@ jobs:
           args: cargo-deb
 
       - name: Install build dependencies
-        run: sudo apt install ${{ matrix.build_deps }}
+        run: sudo apt update && sudo apt install ${{ matrix.build_deps }}
         if: matrix.build_deps != ''
 
       - name: Set up .cargo/config
