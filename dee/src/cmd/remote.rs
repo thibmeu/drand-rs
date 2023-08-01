@@ -9,12 +9,12 @@ use crate::{
     print::{self, print_with_format},
 };
 
-pub async fn add(cfg: &mut config::Local, name: String, url: &str) -> Result<String> {
+pub fn add(cfg: &mut config::Local, name: String, url: &str) -> Result<String> {
     if cfg.chain(&name).is_some() {
         return Err(anyhow!("remote {name} already exists."));
     }
     let client: HttpClient = url.try_into()?;
-    let info = client.chain_info().await.map_err(|err| {
+    let info = client.chain_info().map_err(|err| {
         anyhow!("failed to retrieve information from remote '{name}'. server response: {err}")
     })?;
 

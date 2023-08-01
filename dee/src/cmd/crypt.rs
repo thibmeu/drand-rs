@@ -28,7 +28,7 @@ pub fn file_or_stdout(output: Option<String>) -> Result<Box<dyn io::Write>> {
     Ok(writer)
 }
 
-pub async fn encrypt(
+pub fn encrypt(
     _cfg: &config::Local,
     output: Option<String>,
     input: Option<String>,
@@ -41,7 +41,7 @@ pub async fn encrypt(
         return Err(anyhow!("remote must use unchained signatures"));
     }
 
-    let beacon_time = crate::time::round_from_option(&chain, round).await?;
+    let beacon_time = crate::time::round_from_option(&chain, round)?;
 
     let src = file_or_stdin(input)?;
     let dst = file_or_stdout(output)?;
@@ -69,13 +69,13 @@ pub async fn encrypt(
     .map_err(|err| anyhow!(err))
 }
 
-pub async fn decrypt(
+pub fn decrypt(
     _cfg: &config::Local,
     output: Option<String>,
     input: Option<String>,
     chain: ConfigChain,
 ) -> Result<String> {
-    let mut src = ResetReader::new(file_or_stdin(input.clone())?);
+    let mut src = ResetReader::new(file_or_stdin(input)?);
     let header = tlock_age::decrypt_header(&mut src)?;
     // Once headers have been read, reset the reader to pass it as if unmodified to tlock_age::decrypt
     // This allows the same reader to be used twice.
@@ -90,7 +90,7 @@ pub async fn decrypt(
 
     let time = RandomnessBeaconTime::from_round(&info, header.round());
 
-    let beacon = match client.get(header.round()).await {
+    let beacon = match client.get(header.round()) {
         Ok(beacon) => beacon,
         Err(_) => {
             let relative = time.relative();

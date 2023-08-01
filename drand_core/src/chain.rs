@@ -1,5 +1,4 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use crate::beacon::RandomnessBeacon;
@@ -177,17 +176,16 @@ impl From<ChainInfo> for ChainVerification {
     }
 }
 
-#[async_trait]
 /// Drand client, that can retrieve and validate information from a given chain.
-trait ChainClient {
+pub trait ChainClient {
     /// Options that are used to validate chain result.
     fn options(&self) -> ChainOptions;
     /// Retrieve latest beacon.
     /// This is retrieved and validated based on the client options.
-    async fn latest(&self) -> Result<RandomnessBeacon>;
+    fn latest(&self) -> Result<RandomnessBeacon>;
     /// Retrieve specific round beacon.
     /// This is retrieved and validated based on the client options.
-    async fn get(&self, round_number: u64) -> Result<RandomnessBeacon>;
+    fn get(&self, round_number: u64) -> Result<RandomnessBeacon>;
     /// Chain info the client is associated to.
     fn chain_info(&self) -> Result<ChainInfo>;
 }

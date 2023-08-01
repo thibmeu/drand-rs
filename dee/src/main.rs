@@ -7,8 +7,7 @@ mod config;
 mod print;
 mod time;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let cli = cli::build();
     let mut cfg: config::Local = config::Local::load();
     env_logger::Builder::new()
@@ -23,9 +22,7 @@ async fn main() {
             json,
             beacon,
         } => match cfg.set_upstream_and_chain(set_upstream) {
-            Ok(chain) => {
-                cmd::rand(&cfg, print::Format::new(long, json), chain, beacon, verify).await
-            }
+            Ok(chain) => cmd::rand(&cfg, print::Format::new(long, json), chain, beacon, verify),
             Err(err) => Err(err),
         },
         cli::Commands::Crypt {
@@ -39,18 +36,16 @@ async fn main() {
         } => match cfg.set_upstream_and_chain(set_upstream) {
             Ok(chain) => {
                 if decrypt {
-                    cmd::crypt::decrypt(&cfg, output, input, chain).await
+                    cmd::crypt::decrypt(&cfg, output, input, chain)
                 } else {
-                    cmd::crypt::encrypt(&cfg, output, input, armor, chain, round).await
+                    cmd::crypt::encrypt(&cfg, output, input, armor, chain, round)
                 }
             }
             Err(err) => Err(err),
         },
         cli::Commands::Remote { command } => match command {
             Some(command) => match command {
-                cli::RemoteCommand::Add { name, url } => {
-                    cmd::remote::add(&mut cfg, name, &url).await
-                }
+                cli::RemoteCommand::Add { name, url } => cmd::remote::add(&mut cfg, name, &url),
                 cli::RemoteCommand::Remove { name } => cmd::remote::remove(&mut cfg, name),
                 cli::RemoteCommand::Rename { old, new } => cmd::remote::rename(&mut cfg, old, new),
                 cli::RemoteCommand::SetUrl { name, url } => {

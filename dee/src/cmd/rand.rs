@@ -57,7 +57,7 @@ impl Print for RandResult {
     }
 }
 
-pub async fn rand(
+pub fn rand(
     _cfg: &config::Local,
     format: Format,
     chain: ConfigChain,
@@ -73,8 +73,8 @@ pub async fn rand(
     )?;
 
     let beacon = match beacon {
-        Some(round) => client.get(round).await?,
-        None => client.latest().await?,
+        Some(round) => client.get(round)?,
+        None => client.latest()?,
     };
 
     let time = RandomnessBeaconTime::from_round(&info, beacon.round());

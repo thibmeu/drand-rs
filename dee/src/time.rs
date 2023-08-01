@@ -121,7 +121,7 @@ impl Print for RandomnessBeaconTime {
     }
 }
 
-pub async fn round_from_option(
+pub fn round_from_option(
     chain: &ConfigChain,
     round: Option<String>,
 ) -> Result<RandomnessBeaconTime> {
@@ -134,7 +134,7 @@ pub async fn round_from_option(
 
     let round = match round {
         Some(round) => round,
-        None => client.latest().await?.round().to_string(),
+        None => client.latest()?.round().to_string(),
     };
 
     Ok(RandomnessBeaconTime::new(&info, &round))

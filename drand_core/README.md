@@ -55,7 +55,7 @@ use drand_core::HttpClient;
 let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
 
 // Get the latest beacon. By default, it verifies its signature against the chain info.
-let latest = client.latest().await?;
+let latest = client.latest()?;
 ```
 
 Code examples are provided in [drand_core/examples](./examples). You can run them using `cargo run --examples <name>`.

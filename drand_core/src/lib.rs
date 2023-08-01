@@ -11,17 +11,14 @@
 //! ```rust
 //! use drand_core::HttpClient;
 //!
-//! #[tokio::main]
-//! async fn main() {
-//!   // Create a new client
-//!   let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
-//!   
-//!   // Get the latest beacon. By default, it verifies its signature against the chain info.
-//!   let beacon = client.latest().await.unwrap();
-//!   
-//!   // Print the beacon
-//!   println!("{:?}", beacon);
-//! }
+//! // Create a new client
+//! let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
+//!
+//! // Get the latest beacon. By default, it verifies its signature against the chain info.
+//! let beacon = client.latest().unwrap();
+//!
+//! // Print the beacon
+//! println!("{:?}", beacon);
 //! ```
 
 pub mod beacon;
