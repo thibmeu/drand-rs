@@ -3,13 +3,13 @@
 use std::ops::Neg;
 
 use anyhow::{anyhow, Result};
-use ark_bls12_381::{g1, g2, G1Affine, G1Projective, G2Affine, G2Projective};
+use ark_bls12_381::{g1, g2, G1Affine, G2Affine};
 use ark_ec::{
     bls12::Bls12,
     hashing::{curve_maps::wb::WBMap, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
     models::short_weierstrass,
     pairing::Pairing,
-    AffineRepr, CurveGroup,
+    AffineRepr,
 };
 use ark_ff::{field_hashers::DefaultFieldHasher, Zero};
 use ark_serialize::CanonicalDeserialize;
@@ -45,12 +45,9 @@ pub fn verify_g2_on_g1(
         WBMap<g2::Config>,
     >::new(dst)
     .map_err(|_| anyhow!("cannot initialise mapper for sha2 to BLS12-381 G2"))?;
-    let hash_on_curve = G2Projective::from(
-        mapper
-            .hash(hash)
-            .map_err(|_| anyhow!("hash cannot be mapped to G2"))?,
-    )
-    .into_affine();
+    let hash_on_curve = mapper
+        .hash(hash)
+        .map_err(|_| anyhow!("hash cannot be mapped to G2"))?;
 
     let g1 = G1Affine::generator();
     let sigma = g2_from_variable(signature).map_err(|e| anyhow!("verification Error: {}", e))?;
@@ -73,12 +70,9 @@ pub fn verify_g1_on_g2(
         WBMap<g1::Config>,
     >::new(dst)
     .map_err(|_| anyhow!("cannot initialise mapper for sha2 to BLS12-381 G1"))?;
-    let hash_on_curve = G1Projective::from(
-        mapper
-            .hash(hash)
-            .map_err(|_| anyhow!("hash cannot be mapped to G1"))?,
-    )
-    .into_affine();
+    let hash_on_curve = mapper
+        .hash(hash)
+        .map_err(|_| anyhow!("hash cannot be mapped to G1"))?;
 
     let g2 = G2Affine::generator();
     let sigma = g1_from_variable(signature).map_err(|e| anyhow!("verification Error: {}", e))?;
