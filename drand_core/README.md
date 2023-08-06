@@ -42,7 +42,7 @@ The reference interroperable Go implementation is available at [drand/drand](htt
 |:-------------------|:---------------------------|
 | Cargo (Rust 1.67+) | `cargo install drand_core` |
 
-The library is tested against the following targets: `x86_64-unknown-linux-gnu`, `armv7-unknown-linux-gnueabihf`, `aarch64-unknown-linux-gnu`, `wasm32-wasi`
+The library is tested against the following targets: `x86_64-unknown-linux-gnu`, `armv7-unknown-linux-gnueabihf`, `aarch64-unknown-linux-gnu`, `wasm32-unknown-unknown`
 
 ## Usage
 
