@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- dee: add metadata for future beacons
+
 ## [0.0.11] - 2023-08-08
 
 ## [0.0.10] - 2023-08-08

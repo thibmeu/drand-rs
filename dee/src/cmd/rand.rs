@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 use colored::Colorize;
 use drand_core::{
@@ -16,13 +16,16 @@ use crate::{
 
 #[derive(Serialize)]
 struct RandResult {
-    beacon: RandomnessBeacon,
+    beacon: Option<RandomnessBeacon>,
     time: RandomnessBeaconTime,
 }
 
 impl Print for RandResult {
     fn short(&self) -> Result<String> {
-        Ok(hex::encode(self.beacon.randomness()))
+        match self.beacon.as_ref() {
+            Some(beacon) => Ok(hex::encode(beacon.randomness())),
+            None => Err(anyhow!("beacon does not have randomness associated")),
+        }
     }
     fn long(&self) -> Result<String> {
         let relative = self.time.relative();
@@ -35,10 +38,8 @@ impl Print for RandResult {
             Ordering::Greater => "from now",
         };
         let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2} {epoch}");
-        Ok(format!(
+        let mut output = format!(
             r"{: <10}: {}
-{: <10}: {}
-{: <10}: {}
 {: <10}: {}
 {: <10}: {}",
             "Round".bold(),
@@ -47,11 +48,19 @@ impl Print for RandResult {
             relative,
             "Absolute".bold(),
             self.time.absolute(),
-            "Randomness".bold(),
-            hex::encode(self.beacon.randomness()),
-            "Signature".bold(),
-            hex::encode(self.beacon.signature()),
-        ))
+        );
+        if let Some(beacon) = self.beacon.as_ref() {
+            output = format!(
+                r"{output}
+{: <10}: {}
+{: <10}: {}",
+                "Randomness".bold(),
+                hex::encode(beacon.randomness()),
+                "Signature".bold(),
+                hex::encode(beacon.signature()),
+            );
+        }
+        Ok(output)
     }
 
     fn json(&self) -> Result<String> {
@@ -63,23 +72,27 @@ pub fn rand(
     _cfg: &config::Local,
     format: Format,
     chain: ConfigChain,
-    beacon: Option<u64>,
+    beacon: Option<String>,
     verify: bool,
 ) -> Result<String> {
     let base_url = chain.url();
     let info = chain.info();
+    let latest = beacon.is_none();
+
+    let beacon = beacon.unwrap_or("0s".to_owned());
+    let time = RandomnessBeaconTime::new(&info.clone().into(), &beacon);
 
     let client = HttpClient::new(
         &base_url,
-        Some(ChainOptions::new(verify, true, Some(info.clone().into()))),
+        Some(ChainOptions::new(verify, true, Some(info.into()))),
     )?;
 
-    let beacon = match beacon {
-        Some(round) => client.get(round)?,
-        None => client.latest()?,
-    };
-
-    let time = RandomnessBeaconTime::from_round(&info.into(), beacon.round());
+    let beacon = if latest {
+        client.latest()
+    } else {
+        client.get(time.round())
+    }
+    .ok();
 
     print_with_format(RandResult { beacon, time }, format)
 }

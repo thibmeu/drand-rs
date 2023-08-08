@@ -91,8 +91,13 @@ pub enum Commands {
         /// Enable json output, as defined per drand API
         #[arg(long, default_value_t = false, group = "format")]
         json: bool,
-        /// Round number to retrieve. Leave empty to retrieve the latest round.
-        beacon: Option<u64>,
+        /// Round number to retrieve.
+        /// BEACON can be:
+        /// * a specific round. e.g. 123,
+        /// * a duration. e.g. 30s,
+        /// * an RFC3339 date. e.g. 2023-06-28 21:30:22,
+        /// * empty to retrieve the latest round
+        beacon: Option<String>,
     },
     /// Manage set of tracked chains.
     ///
