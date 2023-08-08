@@ -79,7 +79,7 @@ pub fn rand(
         None => client.latest()?,
     };
 
-    let time = RandomnessBeaconTime::from_round(&info, beacon.round());
+    let time = RandomnessBeaconTime::from_round(&info.into(), beacon.round());
 
     print_with_format(RandResult { beacon, time }, format)
 }

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Public struct for chain time info
+
 ## [0.0.10] - 2023-08-08
 
 ### Added

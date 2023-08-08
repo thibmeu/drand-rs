@@ -8,7 +8,7 @@ use time::{
     ext::NumericalDuration, format_description::well_known::Rfc3339, Duration, OffsetDateTime,
 };
 
-use crate::chain::ChainInfo;
+use crate::chain::{ChainInfo, ChainTimeInfo};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct RandomnessBeacon {
@@ -207,6 +207,13 @@ impl Message for UnchainedBeacon {
 }
 
 #[cfg(feature = "time")]
+impl From<ChainInfo> for ChainTimeInfo {
+    fn from(value: ChainInfo) -> Self {
+        Self::new(value.genesis_time(), value.period())
+    }
+}
+
+#[cfg(feature = "time")]
 #[derive(Debug, Serialize, Deserialize)]
 /// Time of a randomness beacon as seen by drand.
 /// Round and absolute are uniquely tied to a round.
@@ -224,7 +231,7 @@ impl RandomnessBeaconTime {
     /// * a specific round. e.g. 123,
     /// * a duration. e.g. 30s,
     /// * an RFC3339 date. e.g. 2023-06-28 21:30:22
-    pub fn new(info: &ChainInfo, round: &str) -> Self {
+    pub fn new(info: &ChainTimeInfo, round: &str) -> Self {
         match (
             round.parse::<u64>(),
             Self::parse_duration(round),
@@ -249,7 +256,7 @@ impl RandomnessBeaconTime {
         self.absolute
     }
 
-    pub fn from_round(info: &ChainInfo, round: u64) -> Self {
+    pub fn from_round(info: &ChainTimeInfo, round: u64) -> Self {
         let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
 
         let absolute = genesis + (((round - 1) * info.period()) as i64).seconds();
@@ -261,7 +268,7 @@ impl RandomnessBeaconTime {
         }
     }
 
-    fn from_duration(info: &ChainInfo, relative: Duration) -> Self {
+    fn from_duration(info: &ChainTimeInfo, relative: Duration) -> Self {
         let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
 
         let absolute = OffsetDateTime::now_utc() + relative;
@@ -274,7 +281,7 @@ impl RandomnessBeaconTime {
         }
     }
 
-    fn from_datetime(info: &ChainInfo, absolute: OffsetDateTime) -> Self {
+    fn from_datetime(info: &ChainTimeInfo, absolute: OffsetDateTime) -> Self {
         let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
 
         let relative = absolute - OffsetDateTime::now_utc();
@@ -470,7 +477,7 @@ pub mod tests {
     #[test]
     fn randomness_beacon_time_success_works() {
         const FIRST_ROUND: u64 = 1;
-        let chain = unchained_chain_info();
+        let chain = unchained_chain_info().into();
         let beacon_time = RandomnessBeaconTime::new(&chain, &FIRST_ROUND.to_string());
         assert!(
             beacon_time.round() == FIRST_ROUND,
@@ -501,7 +508,7 @@ pub mod tests {
         );
 
         const FUTURE_ROUND: u64 = 10 * 1000 * 1000 * 1000; // attempt of max round. cannot use u64::MAX because we're going to perform multiplication and additions, which would go past the limit
-        let chain = unchained_chain_info();
+        let chain = unchained_chain_info().into();
         let beacon_time = RandomnessBeaconTime::new(&chain, &FUTURE_ROUND.to_string());
         assert!(
             beacon_time.round() == FUTURE_ROUND,
@@ -519,7 +526,7 @@ pub mod tests {
 
         const FUTURE_ROUND_RELATIVE: u64 = 10;
         const FUTURE_ROUND_RELATIVE_TIME: &str = "30s";
-        let chain = unchained_chain_info();
+        let chain = unchained_chain_info().into();
         let beacon_time = RandomnessBeaconTime::new(&chain, "0s");
         let future_beacon_time = RandomnessBeaconTime::new(&chain, FUTURE_ROUND_RELATIVE_TIME);
         assert!(

@@ -190,6 +190,33 @@ pub trait ChainClient {
     fn chain_info(&self) -> Result<ChainInfo>;
 }
 
+#[cfg(feature = "time")]
+#[derive(Debug, Serialize, Deserialize)]
+/// Time information for a chain.
+/// Genesis and period, allowing to reconstruct time information of a given beacon.
+pub struct ChainTimeInfo {
+    genesis_time: u64,
+    period: u64,
+}
+
+#[cfg(feature = "time")]
+impl ChainTimeInfo {
+    pub fn new(genesis_time: u64, period: u64) -> Self {
+        Self {
+            genesis_time,
+            period,
+        }
+    }
+
+    pub fn genesis_time(&self) -> u64 {
+        self.genesis_time
+    }
+
+    pub fn period(&self) -> u64 {
+        self.period
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;

@@ -85,7 +85,7 @@ pub fn decrypt(
         Some(ChainOptions::new(true, true, Some(info.clone().into()))),
     )?;
 
-    let time = RandomnessBeaconTime::from_round(&info, header.round());
+    let time = RandomnessBeaconTime::from_round(&info.into(), header.round());
 
     let beacon = match client.get(header.round()) {
         Ok(beacon) => beacon,

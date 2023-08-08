@@ -47,5 +47,5 @@ pub fn round_from_option(
         None => client.latest()?.round().to_string(),
     };
 
-    Ok(RandomnessBeaconTime::new(&info, &round))
+    Ok(RandomnessBeaconTime::new(&info.into(), &round))
 }
