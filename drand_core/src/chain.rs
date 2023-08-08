@@ -56,7 +56,7 @@ impl ChainInfo {
         self.period
     }
 
-    /// Time of the round 0 of the network (in epoch seconds).
+    /// Time of the round 1 of the network (in epoch seconds).
     pub fn genesis_time(&self) -> u64 {
         self.genesis_time
     }

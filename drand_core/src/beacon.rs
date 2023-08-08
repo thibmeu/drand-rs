@@ -1,6 +1,12 @@
+#[cfg(feature = "time")]
+use anyhow::anyhow;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+#[cfg(feature = "time")]
+use time::{
+    ext::NumericalDuration, format_description::well_known::Rfc3339, Duration, OffsetDateTime,
+};
 
 use crate::chain::ChainInfo;
 
@@ -200,8 +206,106 @@ impl Message for UnchainedBeacon {
     }
 }
 
+#[cfg(feature = "time")]
+#[derive(Debug, Serialize, Deserialize)]
+/// Time of a randomness beacon as seen by drand.
+/// Round and absolute are uniquely tied to a round.
+/// Relative time is generated upon object creation.
+pub struct RandomnessBeaconTime {
+    round: u64,
+    relative: Duration,
+    #[cfg_attr(feature = "time", serde(with = "time::serde::rfc3339"))]
+    absolute: OffsetDateTime,
+}
+
+#[cfg(feature = "time")]
+impl RandomnessBeaconTime {
+    /// round can be:
+    /// * a specific round. e.g. 123,
+    /// * a duration. e.g. 30s,
+    /// * an RFC3339 date. e.g. 2023-06-28 21:30:22
+    pub fn new(info: &ChainInfo, round: &str) -> Self {
+        match (
+            round.parse::<u64>(),
+            Self::parse_duration(round),
+            OffsetDateTime::parse(round, &Rfc3339),
+        ) {
+            (Ok(round), Err(_), Err(_)) => Self::from_round(info, round),
+            (Err(_), Ok(relative), Err(_)) => Self::from_duration(info, relative),
+            (Err(_), Err(_), Ok(absolute)) => Self::from_datetime(info, absolute),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn round(&self) -> u64 {
+        self.round
+    }
+
+    pub fn relative(&self) -> Duration {
+        self.relative
+    }
+
+    pub fn absolute(&self) -> OffsetDateTime {
+        self.absolute
+    }
+
+    pub fn from_round(info: &ChainInfo, round: u64) -> Self {
+        let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
+
+        let absolute = genesis + (((round - 1) * info.period()) as i64).seconds();
+        let relative = absolute - OffsetDateTime::now_utc();
+        Self {
+            round,
+            relative,
+            absolute,
+        }
+    }
+
+    fn from_duration(info: &ChainInfo, relative: Duration) -> Self {
+        let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
+
+        let absolute = OffsetDateTime::now_utc() + relative;
+        let round = ((absolute - genesis).whole_seconds() / (info.period() as i64) + 1) as u64;
+
+        Self {
+            round,
+            relative,
+            absolute,
+        }
+    }
+
+    fn from_datetime(info: &ChainInfo, absolute: OffsetDateTime) -> Self {
+        let genesis = OffsetDateTime::from_unix_timestamp(info.genesis_time() as i64).unwrap();
+
+        let relative = absolute - OffsetDateTime::now_utc();
+        let round = ((absolute - genesis).whole_seconds() / (info.period() as i64) + 1) as u64;
+
+        Self {
+            round,
+            relative,
+            absolute,
+        }
+    }
+
+    fn parse_duration(duration: &str) -> Result<Duration> {
+        let l = duration.len() - 1;
+        let principal = duration[0..l].parse::<i64>()?;
+
+        let duration = match duration.chars().last().unwrap() {
+            's' => principal.seconds(),
+            'm' => principal.minutes(),
+            'h' => principal.hours(),
+            'd' => principal.days(),
+            _ => return Err(anyhow!("cannot parse duration")),
+        };
+        Ok(duration)
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
+    use std::ops::Sub;
+
     use crate::chain::{
         tests::chained_chain_info,
         tests::{unchained_chain_info, unchained_chain_on_g1_info, unchained_chain_on_g1_rfc_info},
@@ -361,5 +465,76 @@ pub mod tests {
                 "Unchained beacon on G1 should not validate on unchained G1 (non Hash to curve RFC compliant) info without returning an error"
             ),
         }
+    }
+
+    #[test]
+    fn randomness_beacon_time_success_works() {
+        const FIRST_ROUND: u64 = 1;
+        let chain = unchained_chain_info();
+        let beacon_time = RandomnessBeaconTime::new(&chain, &FIRST_ROUND.to_string());
+        assert!(
+            beacon_time.round() == FIRST_ROUND,
+            "Round number has been modified when computing its time"
+        );
+        assert!(
+            beacon_time.absolute().unix_timestamp() as u64 == chain.genesis_time(),
+            "Time of the first round must be genesis time"
+        );
+        assert!(
+            beacon_time.relative().is_negative(),
+            "First round should be before current time"
+        );
+
+        let genesis_beacon_time =
+            RandomnessBeaconTime::new(&chain, &beacon_time.absolute().format(&Rfc3339).unwrap());
+        assert!(
+            genesis_beacon_time.round() == FIRST_ROUND,
+            "Parsing genesis from absolute time should provide the first round"
+        );
+        assert!(
+            genesis_beacon_time
+                .relative()
+                .abs()
+                .sub(beacon_time.relative().abs())
+                .is_positive(),
+            "Parsing the same beacon at two different interval should advance relative time"
+        );
+
+        const FUTURE_ROUND: u64 = 10 * 1000 * 1000 * 1000; // attempt of max round. cannot use u64::MAX because we're going to perform multiplication and additions, which would go past the limit
+        let chain = unchained_chain_info();
+        let beacon_time = RandomnessBeaconTime::new(&chain, &FUTURE_ROUND.to_string());
+        assert!(
+            beacon_time.round() == FUTURE_ROUND,
+            "Round number has been modified when computing its time"
+        );
+        assert!(
+            beacon_time.absolute().unix_timestamp() as u64
+                == chain.genesis_time() + (FUTURE_ROUND - 1) * chain.period(),
+            "Time of a future round should be genesis + period"
+        );
+        assert!(
+            beacon_time.relative().is_positive(),
+            "Future round should be after current time"
+        );
+
+        const FUTURE_ROUND_RELATIVE: u64 = 10;
+        const FUTURE_ROUND_RELATIVE_TIME: &str = "30s";
+        let chain = unchained_chain_info();
+        let beacon_time = RandomnessBeaconTime::new(&chain, "0s");
+        let future_beacon_time = RandomnessBeaconTime::new(&chain, FUTURE_ROUND_RELATIVE_TIME);
+        assert!(
+            beacon_time.round() + FUTURE_ROUND_RELATIVE == future_beacon_time.round(),
+            "Round number should match period*difference in round"
+        );
+        assert!(
+            future_beacon_time
+                .relative()
+                .sub(beacon_time.relative())
+                .whole_seconds()
+                .to_string()
+                + "s"
+                == FUTURE_ROUND_RELATIVE_TIME,
+            "Relative time parsing should be precise up to the second"
+        );
     }
 }

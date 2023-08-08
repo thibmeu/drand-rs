@@ -3,13 +3,15 @@ use std::cmp::Ordering;
 use anyhow::Result;
 
 use colored::Colorize;
-use drand_core::{beacon::RandomnessBeacon, ChainOptions, HttpClient};
+use drand_core::{
+    beacon::{RandomnessBeacon, RandomnessBeaconTime},
+    ChainOptions, HttpClient,
+};
 use serde::Serialize;
 
 use crate::{
     config::{self, ConfigChain},
     print::{print_with_format, Format, Print},
-    time::RandomnessBeaconTime,
 };
 
 #[derive(Serialize)]

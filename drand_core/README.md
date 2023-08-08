@@ -26,6 +26,7 @@ The reference interroperable Go implementation is available at [drand/drand](htt
 ## Features
 
 * Retrieve and verify drand randomness
+* Built-in beacon time estimation
 * Chain and unchained randomness
 * Signatures verification on G1 and G2
 * Interroperability with Go and JS implementation
@@ -34,7 +35,6 @@ The reference interroperable Go implementation is available at [drand/drand](htt
 ## What's next
 
 * P2P randomness retrieval
-* Built-in beacon time estimation
 
 ## Installation
 

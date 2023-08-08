@@ -1,12 +1,9 @@
 use std::{fs, io};
 
 use anyhow::{anyhow, Result};
-use drand_core::{ChainOptions, HttpClient};
+use drand_core::{beacon::RandomnessBeaconTime, ChainOptions, HttpClient};
 
-use crate::{
-    config::{self, ConfigChain},
-    time::RandomnessBeaconTime,
-};
+use crate::config::{self, ConfigChain};
 
 pub fn file_or_stdin(input: Option<String>) -> Result<Box<dyn io::Read>> {
     let reader: Box<dyn io::Read> = match input {
