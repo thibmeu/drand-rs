@@ -24,7 +24,19 @@ impl Print for RandResult {
     fn short(&self) -> Result<String> {
         match self.beacon.as_ref() {
             Some(beacon) => Ok(hex::encode(beacon.randomness())),
-            None => Err(anyhow!("beacon does not have randomness associated")),
+            None => {
+                let relative = self.time.relative();
+                let seconds = relative.whole_seconds().abs() % 60;
+                let minutes = relative.whole_minutes().abs() % 60;
+                let hours = relative.whole_hours().abs();
+                let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2}");
+                Err(anyhow!(
+                    "Too early. Beacon round is {}, estimated in {} ({}).",
+                    self.time.round(),
+                    relative,
+                    self.time.absolute(),
+                ))
+            }
         }
     }
     fn long(&self) -> Result<String> {
