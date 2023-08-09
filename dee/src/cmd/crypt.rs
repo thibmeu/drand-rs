@@ -1,9 +1,15 @@
-use std::{fs, io};
+use std::{cmp::Ordering, fs, io};
 
 use anyhow::{anyhow, Result};
-use drand_core::{beacon::RandomnessBeaconTime, ChainOptions, HttpClient};
+use colored::Colorize;
+use drand_core::{beacon::RandomnessBeaconTime, chain::ChainInfo, ChainOptions, HttpClient};
+use serde::Serialize;
+use tlock_age::Header;
 
-use crate::config::{self, ConfigChain};
+use crate::{
+    config::{self, ConfigChain},
+    print::{print_with_format, Format, Print},
+};
 
 pub fn file_or_stdin(input: Option<String>) -> Result<Box<dyn io::Read>> {
     let reader: Box<dyn io::Read> = match input {
@@ -66,6 +72,30 @@ pub fn encrypt(
     .map_err(|err| anyhow!(err))
 }
 
+pub fn inspect(
+    cfg: &config::Local,
+    format: Format,
+    input: Option<String>,
+    chain: ConfigChain,
+) -> Result<String> {
+    let src = file_or_stdin(input)?;
+    let header = tlock_age::decrypt_header(src)?;
+
+    let value = cfg
+        .chains()
+        .into_iter()
+        .find(|(_, chain)| chain.info().hash() == header.hash());
+
+    let result = if let Some((name, chain_config)) = value {
+        let is_upstream = chain.info().hash() == chain_config.info().hash();
+        InspectResult::new(header, Some(name), is_upstream, Some(chain_config.info()))
+    } else {
+        InspectResult::new(header, None, false, None)
+    };
+
+    print_with_format(result, format)
+}
+
 pub fn decrypt(
     _cfg: &config::Local,
     output: Option<String>,
@@ -108,6 +138,101 @@ pub fn decrypt(
     tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature())
         .map(|()| String::from(""))
         .map_err(|err| anyhow!(err))
+}
+
+#[derive(Serialize)]
+struct InspectResult {
+    round: u64,
+    #[serde(with = "hex::serde")]
+    hash: Vec<u8>,
+    chain_name: Option<String>,
+    is_upstream: bool,
+    chain_info: Option<ChainInfo>,
+}
+
+impl InspectResult {
+    pub fn new(
+        header: Header,
+        chain_name: Option<String>,
+        is_upstream: bool,
+        chain_info: Option<ChainInfo>,
+    ) -> Self {
+        Self {
+            round: header.round(),
+            hash: header.hash(),
+            chain_name,
+            is_upstream,
+            chain_info,
+        }
+    }
+
+    pub fn round(&self) -> u64 {
+        self.round
+    }
+
+    pub fn hash(&self) -> Vec<u8> {
+        self.hash.clone()
+    }
+
+    pub fn chain_name(&self) -> Option<String> {
+        self.chain_name.clone()
+    }
+
+    pub fn chain(&self) -> Option<ChainInfo> {
+        self.chain_info.clone()
+    }
+
+    pub fn is_upstream(&self) -> bool {
+        self.is_upstream
+    }
+}
+
+impl Print for InspectResult {
+    fn short(&self) -> Result<String> {
+        Ok(format!("{} {}", self.round(), hex::encode(self.hash())))
+    }
+
+    fn long(&self) -> Result<String> {
+        let mut output: Vec<String> = vec![];
+
+        // Round information
+        output.push(format!("{: <11}: {}", "Round".bold(), self.round()));
+        if let Some(chain) = self.chain() {
+            let time = RandomnessBeaconTime::new(&chain.into(), &self.round().to_string());
+            let relative = time.relative();
+            let seconds = relative.whole_seconds().abs() % 60;
+            let minutes = (relative.whole_minutes()).abs() % 60;
+            let hours = relative.whole_hours().abs();
+            let epoch = match relative.whole_seconds().cmp(&0) {
+                Ordering::Less => "ago",
+                Ordering::Equal => "now",
+                Ordering::Greater => "from now",
+            };
+            let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2} {epoch}");
+            output.push(format!("{: <11}: {}", "Relative".bold(), relative));
+            output.push(format!("{: <11}: {}", "Absolute".bold(), time.absolute()));
+        }
+
+        // Hash information
+        if let Some(name) = self.chain_name() {
+            output.push(format!("{: <11}: {}", "Remote Name".bold(), name));
+        }
+        output.push(format!(
+            "{: <11}: {}",
+            "Upstream".bold(),
+            self.is_upstream()
+        ));
+        output.push(format!(
+            "{: <11}: {}",
+            "Chain Hash".bold(),
+            hex::encode(self.hash())
+        ));
+        Ok(output.join("\n"))
+    }
+
+    fn json(&self) -> Result<String> {
+        Ok(serde_json::to_string(&self)?)
+    }
 }
 
 // Reader buffering every read, and with the ability to re-read what's been read already.

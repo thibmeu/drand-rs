@@ -26,23 +26,31 @@ fn main() {
             Err(err) => Err(err),
         },
         cli::Commands::Crypt {
-            encrypt: _,
+            encrypt,
             decrypt,
+            inspect,
             set_upstream,
             round,
             armor,
             output,
             input,
-        } => match cfg.set_upstream_and_chain(set_upstream) {
-            Ok(chain) => {
-                if decrypt {
-                    cmd::crypt::decrypt(&cfg, output, input, chain)
-                } else {
-                    cmd::crypt::encrypt(&cfg, output, input, armor, chain, round)
-                }
+        } => {
+            let is_inspect = inspect.is_true();
+            match cfg.set_upstream_and_chain(set_upstream) {
+                Ok(chain) => match (encrypt, decrypt, is_inspect) {
+                    (true, false, false) => cmd::crypt::decrypt(&cfg, output, input, chain),
+                    (_, true, _) => cmd::crypt::encrypt(&cfg, output, input, armor, chain, round),
+                    (_, _, true) => cmd::crypt::inspect(
+                        &cfg,
+                        print::Format::new(inspect.long(), inspect.json()),
+                        input,
+                        chain,
+                    ),
+                    _ => unreachable!(),
+                },
+                Err(err) => Err(err),
             }
-            Err(err) => Err(err),
-        },
+        }
         cli::Commands::Remote { command } => match command {
             Some(command) => match command {
                 cli::RemoteCommand::Add { name, url } => cmd::remote::add(&mut cfg, name, &url),

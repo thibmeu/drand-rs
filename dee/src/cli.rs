@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueHint};
+use clap::{Args, Parser, Subcommand, ValueHint};
 
 /// 1. First interaction
 /// drand get --url https://drand.cloudflare.com # latest beacon
@@ -49,6 +49,9 @@ pub enum Commands {
         /// Decrypt the input.
         #[arg(short, long, group = "action")]
         decrypt: bool,
+        /// Inspect the input header.
+        #[command(flatten)]
+        inspect: InspectArg,
         /// Set default upstream. If empty, use the latest upstream.
         #[arg(short = 'u', long)]
         set_upstream: Option<String>,
@@ -92,7 +95,7 @@ pub enum Commands {
         #[arg(long, default_value_t = false, group = "format")]
         json: bool,
         /// Round number to retrieve.
-        /// BEACON can be:
+        /// ROUND can be:
         /// * a specific round. e.g. 123,
         /// * a duration. e.g. 30s,
         /// * an RFC3339 date. e.g. 2023-06-28 21:30:22,
@@ -108,6 +111,41 @@ pub enum Commands {
         #[command(subcommand)]
         command: Option<RemoteCommand>,
     },
+}
+
+#[derive(Args)]
+pub struct InspectArg {
+    /// Inspect the input header.
+    #[arg(long, default_value_t = false, group = "action")]
+    inspect: bool,
+    #[command(flatten)]
+    print: PrintArg,
+}
+
+#[allow(dead_code)]
+impl InspectArg {
+    pub fn is_true(&self) -> bool {
+        self.inspect
+    }
+
+    pub fn long(&self) -> bool {
+        self.print.long
+    }
+
+    pub fn json(&self) -> bool {
+        self.print.json
+    }
+}
+
+#[derive(Args)]
+#[group(multiple = false)]
+pub struct PrintArg {
+    /// Enable detailed output
+    #[arg(short, long, default_value_t = false, group = "format")]
+    long: bool,
+    /// Enable json output, as defined per drand API
+    #[arg(long, default_value_t = false, group = "format")]
+    json: bool,
 }
 
 #[derive(Subcommand)]
