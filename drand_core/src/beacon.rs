@@ -8,7 +8,9 @@ use time::{
     ext::NumericalDuration, format_description::well_known::Rfc3339, Duration, OffsetDateTime,
 };
 
-use crate::chain::{ChainInfo, ChainTimeInfo};
+use crate::chain::ChainInfo;
+#[cfg(feature = "time")]
+use crate::chain::ChainTimeInfo;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct RandomnessBeacon {
