@@ -38,8 +38,10 @@ fn main() {
             let is_inspect = inspect.is_true();
             match cfg.set_upstream_and_chain(set_upstream) {
                 Ok(chain) => match (encrypt, decrypt, is_inspect) {
-                    (true, false, false) => cmd::crypt::decrypt(&cfg, output, input, chain),
-                    (_, true, _) => cmd::crypt::encrypt(&cfg, output, input, armor, chain, round),
+                    (true, false, false) => {
+                        cmd::crypt::encrypt(&cfg, output, input, armor, chain, round)
+                    }
+                    (_, true, _) => cmd::crypt::decrypt(&cfg, output, input, chain),
                     (_, _, true) => cmd::crypt::inspect(
                         &cfg,
                         print::Format::new(inspect.long(), inspect.json()),

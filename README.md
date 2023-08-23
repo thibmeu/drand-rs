@@ -60,43 +60,43 @@ dee [OPTIONS] <COMMAND>
 
 ### Manage remote beacons
 
-Add fastnet remote beacon, and shows details about it.
+Add quicknet remote beacon, and shows details about it.
 ```bash
-dee remote add fastnet https://api.drand.sh/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493
-fastnet
+dee remote add quicknet https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
+quicknet
 ```
 
 ```bash
-dee remote show --long fastnet
-URL       : https://drand.cloudflare.com/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493
-Public Key: a0b862a7527fee3a731bcb59280ab6abd62d5c0b6ea03dc4ddf6612fdfc9d01f01c31542541771903475eb1ec6615f8d0df0b8b6dce385811d6dcf8cbefb8759e5e616a3dfd054c928940766d9a5b9db91e3b697e5d70a975181e007f87fca5e
+dee remote show --long quicknet
+URL       : https://drand.cloudflare.com/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
+Public Key: 83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a
 Period    : 3s
-Genesis   : 2023-03-01 15:40:00 UTC
-Chain Hash: dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493
-Group Hash: a81e9d63f614ccdb144b8ff79fbd4d5a2d22055c0bfe4ee9a8092003dab1c6c0
-Scheme ID : bls-unchained-on-g1
-Beacon ID : fastnet
+Genesis   : 2023-08-23 15:09:27.0 +00:00:00
+Chain Hash: 52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
+Group Hash: f477d5c89f21a17c863a7f937c6a6d15859414d2be09cd448d4279af331c5d3e
+Scheme ID : bls-unchained-g1-rfc9380
+Beacon ID : quicknet
 ```
 
 ### Retrieve public randomness
 
-Retrieve round 1000 from fastnet.
+Retrieve round 1000 from quicknet.
 
 ```bash
-dee rand -u fastnet --long 1000
+dee rand -u quicknet --long 1000
 Round     : 1000
 Relative  : 100:09:43 ago
-Absolute  : 2023-03-01 16:29:57
-Randomness: aa319fc2547e1bdd306633ff63d34e50be76a157477b066906f4d7d63d4e4964
-Signature : b09eacd45767c4d58306b98901ad0d6086e2663766f3a4ec71d00cf26f0f49eaf248abc7151c60cf419c4e8b37e80412
+Absolute  : 2023-08-23 15:59:24
+Randomness: fe290beca10872ef2fb164d2aa4442de4566183ec51c56ff3cd603d930e54fdd
+Signature : b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39
 ```
 
 ### Timelock encryption
 
-Encrypt `Hello dee!` string to 30 seconds in the future, using fastnet publickey. If you wait 30 seconds before decrypting, the message is decrypted using the new fastnet signature.
+Encrypt `Hello dee!` string to 30 seconds in the future, using quicknet publickey. If you wait 30 seconds before decrypting, the message is decrypted using the new quicknet signature.
 
 ```
-echo "Hello dee!" | dee crypt -u fastnet -r 30s > data.dee
+echo "Hello dee!" | dee crypt -u quicknet -r 30s > data.dee
 dee crypt --decrypt data.dee
 Hello dee!
 ```
@@ -105,8 +105,8 @@ Hello dee!
 
 | ID                   | Remote                                                                                          | Timelock encryption |
 | :--------------------|:------------------------------------------------------------------------------------------------|:--------------------|
-| `fastnet-cloudflare` | `https://drand.cloudflare.com/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493` | Yes                 |
-| `fastnet-pl`         | `https://api.drand.sh/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493`         | Yes                 |
+| `quicknet-cloudflare` | `https://drand.cloudflare.com/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971` | Yes                 |
+| `quicknet-pl`         | `https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`         | Yes                 |
 | `mainnet-cloudflare` | `https://drand.cloudflare.com`                                                                  | No                  |
 | `mainnet-pl`         | `https://api.drand.sh`                                                                          | No                  |
 

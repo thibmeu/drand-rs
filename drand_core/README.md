@@ -64,8 +64,8 @@ Code examples are provided in [drand_core/examples](./examples). You can run the
 
 | ID                   | Remote                                                                                          | Timelock encryption |
 | :--------------------|:------------------------------------------------------------------------------------------------|:--------------------|
-| `fastnet-cloudflare` | `https://drand.cloudflare.com/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493` | Yes                 |
-| `fastnet-pl`         | `https://api.drand.sh/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493`         | Yes                 |
+| `quicknet-cloudflare` | `https://drand.cloudflare.com/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971` | Yes                 |
+| `quicknet-pl`         | `https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`         | Yes                 |
 | `mainnet-cloudflare` | `https://drand.cloudflare.com`                                                                  | No                  |
 | `mainnet-pl`         | `https://api.drand.sh`                                                                          | No                  |
 

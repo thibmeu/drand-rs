@@ -24,7 +24,7 @@ The advantage of unchained randomness is it allows the message which the group i
 
 ## Timelock encryption
 
-drand beacons produce signatures at regular interval (fastnet uses 3s for instance), which is the minimum interval we can lock data for. We assimilates this to a clock. We know that signature for round `p` is going to be for message `m = (p)`. We also know the public key `S`.
+drand beacons produce signatures at regular interval (quicknet uses 3s for instance), which is the minimum interval we can lock data for. We assimilates this to a clock. We know that signature for round `p` is going to be for message `m = (p)`. We also know the public key `S`.
 
 We want to encrypt text `M` towards round `p`.
 

@@ -36,8 +36,8 @@ cargo install dee
 Add a remote chain
 
 ```bash
-dee remote add fastnet https://drand.cloudflare.com/dbd506d...
-fastnet
+dee remote add quicknet https://drand.cloudflare.com/dbd506d...
+quicknet
 ```
 
 ---
@@ -47,7 +47,7 @@ fastnet
 Retrieve public randomness
 
 ```bash
-dee rand -u fastnet
+dee rand -u quicknet
 3129db460507ff559f7fa5e71d6f8bc66aec27516de3d78f7461f6299a2bd483
 ```
 
@@ -254,7 +254,7 @@ Hostname instead of chain hash
 
 ```bash
 https://api.drand.sh/dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc...
--> https://fastnet.api.drand.sh
+-> https://quicknet.api.drand.sh
 ```
 
 Stanza format
