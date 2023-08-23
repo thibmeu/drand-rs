@@ -103,7 +103,7 @@ impl ApiBeacon {
 
     fn dst(&self, info: &ChainInfo) -> &[u8] {
         // Name of the HashToCurve RFC compliant scheme has been decided upon in https://github.com/drand/drand/pull/1249
-        if info.scheme_id() == "bls-unchained-g1-rfc" {
+        if info.scheme_id() == "bls-unchained-g1-rfc9380" {
             crate::bls_signatures::G1_DOMAIN
         } else {
             crate::bls_signatures::G2_DOMAIN

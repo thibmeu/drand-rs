@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fix
+
+- Scheme ID of RFC 9380 is bls-unchained-g1-rfc9380
+
 ## [0.0.11] - 2023-08-08
 
 ### Changed

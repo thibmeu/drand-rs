@@ -274,7 +274,7 @@ pub mod tests {
             "genesis_time": 1677685200,
             "hash": "dbd506d6ef76e5f386f41c651dcb808c5bcbd75471cc4eafa3f4df7ad4e4c493",
             "groupHash": "a81e9d63f614ccdb144b8ff79fbd4d5a2d22055c0bfe4ee9a8092003dab1c6c0",
-            "schemeID": "bls-unchained-g1-rfc",
+            "schemeID": "bls-unchained-g1-rfc9380",
             "metadata": {
               "beaconID": "does-not-exist-slacn"
             }
