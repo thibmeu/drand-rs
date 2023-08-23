@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.13] - 2023-08-23
+
+### Added
+
+- Add rfc9380 helper method for ChainInfo
+
 ### Fix
 
 - Scheme ID of RFC 9380 is bls-unchained-g1-rfc9380

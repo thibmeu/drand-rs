@@ -684,7 +684,7 @@ dependencies = [
 
 [[package]]
 name = "dee"
-version = "0.0.12"
+version = "0.0.13"
 dependencies = [
  "anyhow",
  "clap",
@@ -701,7 +701,8 @@ dependencies = [
  "serde",
  "serde_json",
  "time",
- "tlock_age",
+ "tlock_age 0.0.3",
+ "tlock_age 0.0.4",
 ]
 
 [[package]]
@@ -768,7 +769,7 @@ dependencies = [
 
 [[package]]
 name = "drand_core"
-version = "0.0.11"
+version = "0.0.13"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -2274,6 +2275,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "tlock"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bc4f02f0410b404613acaaf9a154b1b8f61642f17c5382aa30e3f08a187aed4"
+dependencies = [
+ "anyhow",
+ "ark-bls12-381",
+ "ark-ec",
+ "ark-ff",
+ "ark-serialize",
+ "getrandom 0.2.10",
+ "itertools",
+ "rand 0.8.5",
+ "serde",
+ "serde_with",
+ "sha2",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "tlock_age"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2284,7 +2306,21 @@ dependencies = [
  "anyhow",
  "hex",
  "thiserror",
- "tlock",
+ "tlock 0.0.3",
+]
+
+[[package]]
+name = "tlock_age"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25ee95043bc06a34fcc7e87e21f900b5e78e4332b280c64533b684ba73edf742"
+dependencies = [
+ "age",
+ "age-core",
+ "anyhow",
+ "hex",
+ "thiserror",
+ "tlock 0.0.4",
 ]
 
 [[package]]

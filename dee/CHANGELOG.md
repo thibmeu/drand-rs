@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.13] - 2023-08-23
+
+### Fix
+
+- RFC 9380 and non RFC 9380 beacons
+
 ## [0.0.12] - 2023-08-09
 
 ### Added
