@@ -76,6 +76,11 @@ impl ChainInfo {
         self.scheme_id.clone()
     }
 
+    /// Is the chain relying on RFC 9380 Hashing to elliptic curves
+    pub fn is_rfc9380(&self) -> bool {
+        self.scheme_id.contains("rfc9380")
+    }
+
     pub fn is_unchained(&self) -> bool {
         self.scheme_id.contains("unchained")
     }
