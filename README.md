@@ -96,7 +96,7 @@ Signature : b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342
 Encrypt `Hello dee!` string to 30 seconds in the future, using quicknet publickey. If you wait 30 seconds before decrypting, the message is decrypted using the new quicknet signature.
 
 ```
-echo "Hello dee!" | dee crypt -u quicknet -r 30s > data.dee
+echo 'Hello dee!' | dee crypt -u quicknet -r 30s > data.dee
 dee crypt --decrypt data.dee
 Hello dee!
 ```
