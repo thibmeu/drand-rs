@@ -1,11 +1,26 @@
-use anyhow::{anyhow, Result};
 use std::{str::FromStr, sync::Mutex};
+use thiserror::Error;
 use url::Url;
 
 use crate::{
-    beacon::{ApiBeacon, RandomnessBeacon},
+    beacon::{ApiBeacon, BeaconError, RandomnessBeacon},
     chain::{ChainInfo, ChainOptions},
+    DrandError, Result,
 };
+
+#[derive(Error, Debug)]
+pub enum HttpClientError {
+    #[error("Chain info is invalid")]
+    InvalidChainInfo,
+    #[error("Failed to retrieve chain info {message}")]
+    FailedToRetrieveChainInfo { message: String },
+    #[error("{e}. You might need to add \"https://\" to the provided URL.")]
+    NoProtocol { e: url::ParseError },
+    #[error(transparent)]
+    ParseURL(#[from] url::ParseError),
+    #[error(transparent)]
+    RequestFailed(#[from] Box<ureq::Error>),
+}
 
 /// HTTP Client for drand
 /// Queries a specified HTTP endpoint given by `chain`, with specific `options`
@@ -23,9 +38,9 @@ impl HttpClient {
         // The error provided by url::Url is rather obscure when that happens.
         let mut url = Url::parse(base_url).map_err(|e| {
             if e == url::ParseError::RelativeUrlWithoutBase {
-                anyhow!("{e}. You might need to add \"https://\" to the provided URL.")
+                Box::new(HttpClientError::NoProtocol { e })
             } else {
-                anyhow!(e)
+                Box::new(HttpClientError::ParseURL(e))
             }
         })?;
         // Ensure base URL ends with a trailing slash.
@@ -44,24 +59,37 @@ impl HttpClient {
     fn chain_info_no_cache(&self) -> Result<ChainInfo> {
         let response = self
             .http_client
-            .get(self.base_url.join("info")?.as_str())
-            .call()?;
+            .get(
+                self.base_url
+                    .join("info")
+                    .map_err(|e| -> DrandError { Box::new(HttpClientError::ParseURL(e)).into() })?
+                    .as_str(),
+            )
+            .call()
+            .map_err(|e| -> DrandError {
+                Box::new(HttpClientError::RequestFailed(e.into())).into()
+            })?;
         let info = if response.status() < 400 {
-            response.into_json::<ChainInfo>()?
+            response
+                .into_json::<ChainInfo>()
+                .map_err(|_| Box::new(BeaconError::Parsing))?
         } else {
-            return Err(anyhow!(
-                "{}",
-                response.into_string().map_err(|e| anyhow!(e))?
-            ));
+            return Err(Box::new(HttpClientError::FailedToRetrieveChainInfo {
+                message: response.into_string().unwrap_or_default(),
+            })
+            .into());
         };
         match self.options().verify(&info) {
             true => Ok(info),
-            false => Err(anyhow!("Chain info is invalid")),
+            false => Err(Box::new(HttpClientError::InvalidChainInfo).into()),
         }
     }
 
     fn beacon_url(&self, round: String) -> Result<Url> {
-        let mut url = self.base_url.join(&format!("public/{round}"))?;
+        let mut url = self
+            .base_url
+            .join(&format!("public/{round}"))
+            .map_err(|e| -> DrandError { Box::new(HttpClientError::ParseURL(e)).into() })?;
         if !self.options().is_cache() {
             url.query_pairs_mut()
                 .append_key_only(format!("{}", rand::random::<u64>()).as_str());
@@ -76,8 +104,31 @@ impl HttpClient {
 
         match beacon.verify(self.chain_info()?)? {
             true => Ok(beacon),
-            false => Err(anyhow!("Beacon does not validate")),
+            false => Err(Box::new(BeaconError::Validation).into()),
         }
+    }
+
+    fn get_with_string(&self, round: String) -> Result<RandomnessBeacon> {
+        let beacon = self
+            .http_client
+            .get(self.beacon_url(round)?.as_str())
+            .call()
+            .map_err(|e| -> DrandError {
+                match e {
+                    ureq::Error::Status(code, _) if code == 404 => {
+                        Box::new(BeaconError::NotFound).into()
+                    }
+                    _ => Box::new(HttpClientError::RequestFailed(e.into())).into(),
+                }
+            })?
+            .into_json::<ApiBeacon>()
+            .map_err(|_| -> DrandError { Box::new(BeaconError::Parsing).into() })?;
+
+        let info = self.chain_info()?;
+        let unix_time = info.genesis_time() + beacon.round() * info.period();
+        let beacon = RandomnessBeacon::new(beacon, unix_time);
+
+        self.verify_beacon(beacon)
     }
 
     pub fn base_url(&self) -> String {
@@ -107,31 +158,11 @@ impl HttpClient {
     pub fn latest(&self) -> Result<RandomnessBeacon> {
         // it is possible to either use round number 0, or to infer the round number based on the current time
         // however, to match the existing endpoint API, using latest independantly seems to be the best approach
-        let beacon = self
-            .http_client
-            .get(self.beacon_url("latest".to_string())?.as_str())
-            .call()?
-            .into_json::<ApiBeacon>()?;
-
-        let info = self.chain_info()?;
-        let unix_time = info.genesis_time() + beacon.round() * info.period();
-        let beacon = RandomnessBeacon::new(beacon, unix_time);
-
-        self.verify_beacon(beacon)
+        self.get_with_string("latest".to_owned())
     }
 
     pub fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
-        let beacon = self
-            .http_client
-            .get(self.beacon_url(round_number.to_string())?.as_str())
-            .call()?
-            .into_json::<ApiBeacon>()?;
-
-        let info = self.chain_info()?;
-        let unix_time = info.genesis_time() + beacon.round() * info.period();
-        let beacon = RandomnessBeacon::new(beacon, unix_time);
-
-        self.verify_beacon(beacon)
+        self.get_with_string(round_number.to_string())
     }
 
     pub fn get_by_unix_time(&self, round_unix_time: u64) -> Result<RandomnessBeacon> {
@@ -161,7 +192,7 @@ impl crate::chain::ChainClient for HttpClient {
 }
 
 impl TryFrom<&str> for HttpClient {
-    type Error = anyhow::Error;
+    type Error = DrandError;
 
     fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
         Self::from_str(value)
@@ -169,7 +200,7 @@ impl TryFrom<&str> for HttpClient {
 }
 
 impl FromStr for HttpClient {
-    type Err = anyhow::Error;
+    type Err = DrandError;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         Self::new(s, None)

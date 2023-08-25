@@ -1,16 +1,27 @@
-#[cfg(feature = "time")]
-use anyhow::anyhow;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use thiserror::Error;
 #[cfg(feature = "time")]
 use time::{
     ext::NumericalDuration, format_description::well_known::Rfc3339, Duration, OffsetDateTime,
 };
 
-use crate::chain::ChainInfo;
 #[cfg(feature = "time")]
 use crate::chain::ChainTimeInfo;
+use crate::{chain::ChainInfo, DrandError, Result};
+
+#[derive(Error, Debug)]
+pub enum BeaconError {
+    #[cfg(feature = "time")]
+    #[error("cannot parse duration")]
+    DurationParse,
+    #[error("beacon not found")]
+    NotFound,
+    #[error("parsing failed")]
+    Parsing,
+    #[error("validation failed")]
+    Validation,
+}
 
 #[derive(Clone, Debug, Serialize)]
 pub struct RandomnessBeacon {
@@ -298,14 +309,16 @@ impl RandomnessBeaconTime {
 
     fn parse_duration(duration: &str) -> Result<Duration> {
         let l = duration.len() - 1;
-        let principal = duration[0..l].parse::<i64>()?;
+        let principal = duration[0..l]
+            .parse::<i64>()
+            .map_err(|_| -> DrandError { Box::new(BeaconError::DurationParse).into() })?;
 
         let duration = match duration.chars().last().unwrap() {
             's' => principal.seconds(),
             'm' => principal.minutes(),
             'h' => principal.hours(),
             'd' => principal.days(),
-            _ => return Err(anyhow!("cannot parse duration")),
+            _char => return Err(Box::new(BeaconError::DurationParse).into()),
         };
         Ok(duration)
     }

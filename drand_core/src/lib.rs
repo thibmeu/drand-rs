@@ -27,3 +27,16 @@ pub mod chain;
 pub use chain::ChainOptions;
 mod http_client;
 pub use http_client::HttpClient;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum DrandError {
+    #[error(transparent)]
+    Beacon(#[from] Box<beacon::BeaconError>),
+    #[error(transparent)]
+    HTTPClient(#[from] Box<http_client::HttpClientError>),
+    #[error(transparent)]
+    Signature(#[from] Box<bls_signatures::VerificationError>),
+}
+
+type Result<T> = std::result::Result<T, DrandError>;

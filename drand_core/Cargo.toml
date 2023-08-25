@@ -12,7 +12,6 @@ categories = ["cryptography"]
 license = "MIT"
 
 [dependencies]
-anyhow = "1.0.72"
 ark-bls12-381 = "0.4.0"
 ark-ec = "0.4.2"
 ark-ff = "0.4.2"
@@ -22,6 +21,7 @@ rand = "0.8.5"
 serde = { version = "1.0.174", features = ["derive", "rc"] }
 serde_json = "1.0.103"
 sha2 = "0.10.7"
+thiserror = "1.0.47"
 time = { version = "0.3.23", features = ["parsing", "serde-well-known"], optional = true }
 ureq = { version = "2.7.1", features = ["json"] }
 url = { version = "2.4", features = ["serde"] }
