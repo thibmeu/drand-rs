@@ -220,6 +220,8 @@ impl Print for InspectResult {
         // Round information
         output.push(format!("{: <11}: {}", "Round".bold(), self.round()));
         if let Some(chain) = self.chain() {
+            let format =
+                time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]Z")?;
             let time = RandomnessBeaconTime::new(&chain.into(), &self.round().to_string());
             let relative = time.relative();
             let seconds = relative.whole_seconds().abs() % 60;
@@ -232,7 +234,11 @@ impl Print for InspectResult {
             };
             let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2} {epoch}");
             output.push(format!("{: <11}: {}", "Relative".bold(), relative));
-            output.push(format!("{: <11}: {}", "Absolute".bold(), time.absolute()));
+            output.push(format!(
+                "{: <11}: {}",
+                "Absolute".bold(),
+                time.absolute().format(&format)?
+            ));
         }
 
         // Hash information

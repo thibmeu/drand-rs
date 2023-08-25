@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Improved error messages on network failure
 - Automatically set upstream on the first added remote
+- RFC3339 time format cut to second precision for readability
 
 ## [0.0.13] - 2023-08-23
 

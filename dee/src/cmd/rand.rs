@@ -31,6 +31,9 @@ impl Print for RandResult {
         match self.beacon.as_ref() {
             Some(beacon) => Ok(hex::encode(beacon.randomness())),
             None => {
+                let format = time::format_description::parse(
+                    "[year]-[month]-[day]T[hour]:[minute]:[second]Z",
+                )?;
                 let relative = self.time.relative();
                 let seconds = relative.whole_seconds().abs() % 60;
                 let minutes = relative.whole_minutes().abs() % 60;
@@ -40,12 +43,14 @@ impl Print for RandResult {
                     "Too early. Beacon round is {}, estimated in {} ({}).",
                     self.time.round(),
                     relative,
-                    self.time.absolute(),
+                    self.time.absolute().format(&format)?,
                 ))
             }
         }
     }
     fn long(&self) -> Result<String> {
+        let format =
+            time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]Z")?;
         let relative = self.time.relative();
         let seconds = relative.whole_seconds().abs() % 60;
         let minutes = (relative.whole_minutes()).abs() % 60;
@@ -65,7 +70,7 @@ impl Print for RandResult {
             "Relative".bold(),
             relative,
             "Absolute".bold(),
-            self.time.absolute(),
+            self.time.absolute().format(&format)?,
         );
         if let Some(beacon) = self.beacon.as_ref() {
             output = format!(
