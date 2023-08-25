@@ -48,8 +48,12 @@ impl Local {
     }
 
     pub fn add_chain(&mut self, name: String, config_chain: ConfigChain) -> Result<()> {
-        self.chains.insert(name, config_chain);
-        Ok(())
+        self.chains.insert(name.clone(), config_chain);
+        if self.chains.len() == 1 {
+            self.set_upstream(&name)
+        } else {
+            Ok(())
+        }
     }
 
     pub fn remove_chain(&mut self, name: String) -> Result<()> {
