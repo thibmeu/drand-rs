@@ -4,8 +4,8 @@ use anyhow::{anyhow, Result};
 
 use colored::Colorize;
 use drand_core::{
-    beacon::{RandomnessBeacon, RandomnessBeaconTime},
-    ChainOptions, HttpClient,
+    beacon::{BeaconError, RandomnessBeacon, RandomnessBeaconTime},
+    ChainOptions, DrandError, HttpClient,
 };
 use serde::Serialize;
 
@@ -15,9 +15,15 @@ use crate::{
 };
 
 #[derive(Serialize)]
-struct RandResult {
+pub(crate) struct RandResult {
     beacon: Option<RandomnessBeacon>,
     time: RandomnessBeaconTime,
+}
+
+impl RandResult {
+    pub(crate) fn new(beacon: Option<RandomnessBeacon>, time: RandomnessBeaconTime) -> Self {
+        Self { beacon, time }
+    }
 }
 
 impl Print for RandResult {
@@ -103,8 +109,14 @@ pub fn rand(
         client.latest()
     } else {
         client.get(time.round())
-    }
-    .ok();
+    };
 
-    print_with_format(RandResult { beacon, time }, format)
+    match beacon {
+        Ok(beacon) => print_with_format(RandResult::new(Some(beacon), time), format),
+        Err(DrandError::Beacon(e)) => match *e {
+            BeaconError::NotFound => print_with_format(RandResult::new(None, time), format),
+            _ => Ok(e.to_string()),
+        },
+        Err(e) => Err(e.into()),
+    }
 }

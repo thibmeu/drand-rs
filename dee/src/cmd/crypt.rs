@@ -2,7 +2,11 @@ use std::{cmp::Ordering, fs, io};
 
 use anyhow::{anyhow, Result};
 use colored::Colorize;
-use drand_core::{beacon::RandomnessBeaconTime, chain::ChainInfo, ChainOptions, HttpClient};
+use drand_core::{
+    beacon::{BeaconError, RandomnessBeaconTime},
+    chain::ChainInfo,
+    ChainOptions, DrandError, HttpClient,
+};
 use serde::Serialize;
 use tlock_age::Header;
 
@@ -139,19 +143,11 @@ pub fn decrypt(
 
     let beacon = match client.get(header.round()) {
         Ok(beacon) => beacon,
-        Err(_) => {
-            let relative = time.relative();
-            let seconds = relative.whole_seconds().abs() % 60;
-            let minutes = relative.whole_minutes().abs() % 60;
-            let hours = relative.whole_hours().abs();
-            let relative = format!("{hours:0>2}:{minutes:0>2}:{seconds:0>2}");
-            return Err(anyhow!(
-                "Too early. Decryption round is {}, estimated in {} ({}).",
-                time.round(),
-                relative,
-                time.absolute(),
-            ));
-        }
+        Err(DrandError::Beacon(e)) => match *e {
+            BeaconError::NotFound => return crate::cmd::rand::RandResult::new(None, time).short(),
+            err => return Err(err.into()),
+        },
+        Err(e) => return Err(e.into()),
     };
 
     let dst = file_or_stdout(output)?;
