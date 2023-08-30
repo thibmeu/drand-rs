@@ -30,11 +30,9 @@ url = { version = "2.4", features = ["serde"] }
 getrandom = { version = "0.2.10", features = ["js"] }
 
 [features]
-default = ["time"]
+default = ["time", "native-certs"]
+native-certs = ["ureq/native-certs"]
 time = ["dep:time"]
-
-[target.'cfg(wasm32)'.features]
-default = []
 
 [dev-dependencies]
 hex-literal = "0.4.1"

@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 - Dedicated error type
+- Add use of OS certificate store when available
 
 ## [0.0.13] - 2023-08-23
 
