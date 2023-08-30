@@ -46,7 +46,7 @@ Retrieve public randomness, and encrypt your files to the future. **dee** provid
 
 | Environment | CLI Command |
 |:------------|:------------|
-| Cargo (Rust 1.67+) | `cargo install dee --git https://github.com/thibmeu/drand-rs` |
+| Cargo (Rust 1.70+) | `cargo install dee --git https://github.com/thibmeu/drand-rs` |
 
 On Linux, Windows, or macOS, you can use the [pre-built binaries](https://github.com/thibmeu/drand-rs/releases).
 
