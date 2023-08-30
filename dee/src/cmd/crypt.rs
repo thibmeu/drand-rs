@@ -105,12 +105,7 @@ pub fn inspect(
     let src = file_or_stdin(input)?;
     let header = tlock_age::decrypt_header(src)?;
 
-    let value = cfg
-        .chains()
-        .into_iter()
-        .find(|(_, chain)| chain.info().hash() == header.hash());
-
-    let result = if let Some((name, chain_config)) = value {
+    let result = if let Some((name, chain_config)) = cfg.chain_by_hash(&header.hash()) {
         let is_upstream = chain.info().hash() == chain_config.info().hash();
         InspectResult::new(header, Some(name), is_upstream, Some(chain_config.info()))
     } else {
@@ -121,7 +116,7 @@ pub fn inspect(
 }
 
 pub fn decrypt(
-    _cfg: &config::Local,
+    cfg: &config::Local,
     output: Option<String>,
     input: Option<String>,
     chain: ConfigChain,
@@ -133,6 +128,12 @@ pub fn decrypt(
     src.reset();
 
     let info = chain.info();
+
+    if header.hash() != info.hash() {
+        if let Some((name, _chain_config)) = cfg.chain_by_hash(&header.hash()) {
+            return Err(anyhow!("decryption failed.\nDid you forget `-u {name}`?"));
+        }
+    };
 
     let client = HttpClient::new(
         &chain.url(),

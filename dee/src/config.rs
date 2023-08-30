@@ -47,6 +47,13 @@ impl Local {
         self.chains.clone()
     }
 
+    pub fn chain_by_hash(&self, hash: &[u8]) -> Option<(String, ConfigChain)> {
+        self.chains
+            .iter()
+            .find(|(_, chain)| chain.info().hash() == hash)
+            .map(|(name, chain)| (name.clone(), chain.clone()))
+    }
+
     pub fn add_chain(&mut self, name: String, config_chain: ConfigChain) -> Result<()> {
         self.chains.insert(name.clone(), config_chain);
         if self.chains.len() == 1 {
