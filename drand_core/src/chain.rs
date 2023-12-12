@@ -35,8 +35,8 @@ pub struct ChainInfo {
     #[serde(with = "hex::serde")]
     hash: Vec<u8>,
     #[serde(
-        rename(serialize = "groupHash", deserialize = "groupHash"),
-        with = "hex::serde"
+    rename(serialize = "groupHash", deserialize = "groupHash"),
+    with = "hex::serde"
     )]
     group_hash: Vec<u8>,
     #[serde(rename(serialize = "schemeID", deserialize = "schemeID"))]
@@ -223,6 +223,7 @@ impl ChainTimeInfo {
 
 #[cfg(test)]
 pub mod tests {
+    use serde_json::json;
     use super::*;
 
     /// drand mainnet (curl -sS https://drand.cloudflare.com/info)
@@ -283,6 +284,34 @@ pub mod tests {
               "beaconID": "does-not-exist-slacn"
             }
         }"#).unwrap()
+    }
+
+    pub fn create_chained_info_with_genesis(genesis_time: u64) -> ChainInfo {
+        serde_json::from_value(json!({
+                        "public_key": "868f005eb8e6e4ca0a47c8a77ceaa5309a47978a7c71bc5cce96366b5d7a569937c529eeda66c7293784a9402801af31",
+            "period": 30,
+            "genesis_time": genesis_time,
+            "hash": "8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce",
+            "groupHash": "176f93498eac9ca337150b46d21dd58673ea4e3581185f869672e59fa4cb390a",
+            "schemeID": "pedersen-bls-chained",
+            "metadata": {
+                "beaconID": "default"
+            }
+        })).unwrap()
+    }
+
+    pub fn create_unchained_info_with_genesis(genesis_time: u64) -> ChainInfo {
+        serde_json::from_value(json!({
+            "public_key": "8200fc249deb0148eb918d6e213980c5d01acd7fc251900d9260136da3b54836ce125172399ddc69c4e3e11429b62c11",
+            "period": 3,
+            "genesis_time": genesis_time,
+            "hash": "7672797f548f3f4748ac4bf3352fc6c6b6468c9ad40ad456a397545c6e2df5bf",
+            "groupHash": "65083634d852ae169e21b6ce5f0410be9ed4cc679b9970236f7875cff667e13d",
+            "schemeID": "pedersen-bls-unchained",
+            "metadata": {
+                "beaconID": "testnet-unchained-3s"
+            }
+        })).unwrap()
     }
 
     #[test]
