@@ -19,6 +19,8 @@ pub enum BeaconError {
     NotFound,
     #[error("parsing failed")]
     Parsing,
+    #[error("round mismatch")]
+    RoundMismatch,
     #[error("validation failed")]
     Validation,
 }
