@@ -54,7 +54,7 @@ use drand_core::HttpClient;
 // Create a new client.
 let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
 
-// Get the latest beacon. By default, it verifies its signature against the chain info.
+// Get the latest beacon. By default, it verifies its signature against the chain info, and correlates the returned round number with the chain genesis time.
 let latest = client.latest()?;
 ```
 

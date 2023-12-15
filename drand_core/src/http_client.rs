@@ -1,7 +1,11 @@
 use std::{str::FromStr, sync::Mutex};
 use thiserror::Error;
+#[cfg(feature = "time")]
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use url::Url;
 
+#[cfg(feature = "time")]
+use crate::beacon::RandomnessBeaconTime;
 use crate::{
     beacon::{ApiBeacon, BeaconError, RandomnessBeacon},
     chain::{ChainInfo, ChainOptions},
@@ -97,21 +101,31 @@ impl HttpClient {
         Ok(url)
     }
 
-    fn verify_beacon(&self, beacon: RandomnessBeacon) -> Result<RandomnessBeacon> {
+    fn verify_beacon(&self, beacon: RandomnessBeacon, round: String) -> Result<RandomnessBeacon> {
         if !self.options().is_beacon_verification() {
             return Ok(beacon);
         }
 
-        match beacon.verify(self.chain_info()?)? {
-            true => Ok(beacon),
-            false => Err(Box::new(BeaconError::Validation).into()),
+        if !beacon.verify(self.chain_info()?)? {
+            return Err(Box::new(BeaconError::Validation).into());
         }
+
+        if round == "latest" {
+            return Ok(beacon);
+        }
+        let round: u64 = round
+            .parse()
+            .map_err(|_| -> DrandError { Box::new(BeaconError::Parsing).into() })?;
+        if beacon.round() != round {
+            return Err(Box::new(BeaconError::RoundMismatch).into());
+        }
+        Ok(beacon)
     }
 
     fn get_with_string(&self, round: String) -> Result<RandomnessBeacon> {
         let beacon = self
             .http_client
-            .get(self.beacon_url(round)?.as_str())
+            .get(self.beacon_url(round.clone())?.as_str())
             .call()
             .map_err(|e| -> DrandError {
                 match e {
@@ -128,7 +142,7 @@ impl HttpClient {
         let unix_time = info.genesis_time() + beacon.round() * info.period();
         let beacon = RandomnessBeacon::new(beacon, unix_time);
 
-        self.verify_beacon(beacon)
+        self.verify_beacon(beacon, round)
     }
 
     pub fn base_url(&self) -> String {
@@ -155,10 +169,19 @@ impl HttpClient {
         }
     }
 
+    #[cfg(feature = "time")]
     pub fn latest(&self) -> Result<RandomnessBeacon> {
-        // it is possible to either use round number 0, or to infer the round number based on the current time
-        // however, to match the existing endpoint API, using latest independantly seems to be the best approach
-        self.get_with_string("latest".to_owned())
+        // it is possible to either use round number 0, latest, or to infer the round number based on the current time
+        // to allow for round verification, using inferance seems to be the best approach
+        // without verification, latest is used instead
+        if self.options().is_beacon_verification() {
+            let info = self.chain_info()?;
+            let now = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
+            let time = RandomnessBeaconTime::new(&info.into(), &now);
+            self.get_with_string(time.round().to_string())
+        } else {
+            self.get_with_string("latest".to_owned())
+        }
     }
 
     pub fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
@@ -213,6 +236,8 @@ mod tests {
     use crate::chain::{
         tests::chained_chain_info, tests::unchained_chain_info, ChainOptions, ChainVerification,
     };
+    #[cfg(feature = "time")]
+    use time::Duration;
 
     use super::*;
 
@@ -227,8 +252,9 @@ mod tests {
             .with_body(serde_json::to_string(&chained_chain_info()).unwrap())
             .expect_at_least(2)
             .create();
-        let latest_mock = server
-            .mock("GET", "/public/latest")
+        let expected_round = chained_beacon().round();
+        let get_mock = server
+            .mock("GET", format!("/public/{expected_round}").as_str())
             .match_query(mockito::Matcher::Any)
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -253,16 +279,16 @@ mod tests {
         let _ = no_cache_client.chain_info();
         info_mock.assert();
 
-        // latest endpoint
-        let latest = match no_cache_client.latest() {
+        // get endpoint
+        let beacon = match no_cache_client.get(expected_round) {
             Ok(beacon) => beacon,
             Err(_err) => panic!("fetch should have succeded"),
         };
-        assert_eq!(latest.beacon(), chained_beacon());
-        assert_eq!(latest.time(), 1625431050);
+        assert_eq!(beacon.beacon(), chained_beacon());
+        assert_eq!(beacon.time(), 1625431050);
         // do it again to see if it's cached or not
-        let _ = no_cache_client.latest();
-        latest_mock.assert();
+        let _ = no_cache_client.get(expected_round);
+        get_mock.assert();
     }
 
     #[test]
@@ -276,8 +302,9 @@ mod tests {
             .with_body(serde_json::to_string(&chained_chain_info()).unwrap())
             .expect_at_least(1)
             .create();
-        let latest_mock = server
-            .mock("GET", "/public/latest")
+        let expected_round = chained_beacon().round();
+        let get_mock = server
+            .mock("GET", format!("/public/{expected_round}").as_str())
             .match_query(mockito::Matcher::Any)
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -288,7 +315,7 @@ mod tests {
         // test client with cache
         let cache_client = HttpClient::new(
             server.url().as_str(),
-            Some(ChainOptions::new(true, true, None)),
+            Some(ChainOptions::new(false, true, None)),
         )
         .unwrap();
 
@@ -302,16 +329,45 @@ mod tests {
         let _ = cache_client.chain_info();
         info_mock.assert();
 
-        // latest endpoint
-        let latest = match cache_client.latest() {
+        // get endpoint
+        let beacon = match cache_client.get(expected_round) {
             Ok(beacon) => beacon,
             Err(_err) => panic!("fetch should have succeded"),
         };
-        assert_eq!(latest.beacon(), chained_beacon());
-        assert_eq!(latest.time(), 1625431050);
+        assert_eq!(beacon.beacon(), chained_beacon());
+        assert_eq!(beacon.time(), 1625431050);
         // do it again to see if it's cached or not
-        let _ = cache_client.latest();
-        latest_mock.assert();
+        let _ = cache_client.get(expected_round);
+        get_mock.assert();
+    }
+
+    // Fakes the chain info genesis time so that the provided beacon is the latest one for the current time
+    pub fn chain_info_with_latest(beacon: &ApiBeacon) -> ChainInfo {
+        let info = unchained_chain_info();
+        let latest_round = beacon.round();
+        let period = info.period();
+        let genesis_time = OffsetDateTime::now_utc()
+            .checked_sub(Duration::seconds((latest_round * period - 1) as i64))
+            .unwrap()
+            .unix_timestamp();
+        serde_json::from_str(&format!(
+            r#"{{
+            "public_key": "{public_key}",
+            "period": {period},
+            "genesis_time": {genesis_time},
+            "hash": "{hash}",
+            "groupHash": "{group_hash}",
+            "schemeID": "{scheme_id}",
+            "metadata": {{
+                "beaconID": "default"
+            }}
+        }}"#,
+            public_key = hex::encode(info.public_key()),
+            hash = hex::encode(info.hash()),
+            group_hash = hex::encode(info.group_hash()),
+            scheme_id = info.scheme_id()
+        ))
+        .unwrap()
     }
 
     #[test]
@@ -323,11 +379,20 @@ mod tests {
             .match_query(mockito::Matcher::Any)
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(serde_json::to_string(&unchained_chain_info()).unwrap())
+            .with_body(serde_json::to_string(&chain_info_with_latest(&unchained_beacon())).unwrap())
             .expect_at_least(1)
             .create();
         let _latest_mock = valid_server
             .mock("GET", "/public/latest")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(serde_json::to_string(&unchained_beacon()).unwrap())
+            .expect_at_least(1)
+            .create();
+        let expected_round = unchained_beacon().round();
+        let _get_mock = valid_server
+            .mock("GET", format!("/public/{expected_round}").as_str())
             .match_query(mockito::Matcher::Any)
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -349,6 +414,18 @@ mod tests {
         };
         assert_eq!(latest.beacon(), unchained_beacon());
 
+        // test client with round verification
+        let client = HttpClient::new(
+            valid_server.url().as_str(),
+            Some(ChainOptions::new(true, false, None)),
+        )
+        .unwrap();
+
+        match client.get(expected_round) {
+            Ok(beacon) => assert_eq!(beacon.beacon(), unchained_beacon()),
+            Err(err) => panic!("fetch should have succeded {}", err),
+        }
+
         let mut invalid_server = mockito::Server::new();
         let _info_mock = invalid_server
             .mock("GET", "/info")
@@ -358,8 +435,9 @@ mod tests {
             .with_body(serde_json::to_string(&chained_chain_info()).unwrap())
             .expect_at_least(1)
             .create();
-        let _latest_mock = invalid_server
-            .mock("GET", "/public/latest")
+        let expected_round = invalid_beacon().round();
+        let _get_mock = invalid_server
+            .mock("GET", format!("/public/{expected_round}").as_str())
             .match_query(mockito::Matcher::Any)
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -374,8 +452,8 @@ mod tests {
         )
         .unwrap();
 
-        // latest endpoint
-        match client.latest() {
+        // get endpoint
+        match client.get(expected_round) {
             Ok(_beacon) => panic!("Beacon should not validate"),
             Err(_err) => (),
         }
@@ -401,6 +479,24 @@ mod tests {
             .with_body(serde_json::to_string(&unchained_beacon()).unwrap())
             .expect_at_least(1)
             .create();
+        let expected_round = chained_beacon().round();
+        let _get_mock = valid_server
+            .mock("GET", format!("/public/{expected_round}").as_str())
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(serde_json::to_string(&unchained_beacon()).unwrap())
+            .expect_at_least(1)
+            .create();
+        let invalid_round = expected_round + 1;
+        let _get_mock = valid_server
+            .mock("GET", format!("/public/{invalid_round}").as_str())
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(serde_json::to_string(&unchained_beacon()).unwrap())
+            .expect_at_least(1)
+            .create();
 
         // test client without cache
         let unchained_info = unchained_chain_info();
@@ -417,13 +513,13 @@ mod tests {
         )
         .unwrap();
 
-        // latest endpoint
-        let latest = match unchained_client.latest() {
+        // get endpoint
+        let beacon = match unchained_client.get(expected_round) {
             Ok(beacon) => beacon,
             Err(err) => panic!("fetch should have succeded {}", err),
         };
-        assert_eq!(latest.beacon(), unchained_beacon());
-        assert_eq!(latest.time(), 1654677099);
+        assert_eq!(beacon.beacon(), unchained_beacon());
+        assert_eq!(beacon.time(), 1654677099);
 
         // test with not the correct hash
         let chained_info = chained_chain_info();
@@ -437,7 +533,7 @@ mod tests {
         )
         .unwrap();
 
-        match invalid_client.latest() {
+        match invalid_client.get(expected_round) {
             Ok(_beacon) => panic!("Beacon should not validate"),
             Err(_err) => (),
         };
@@ -456,7 +552,27 @@ mod tests {
         )
         .unwrap();
 
-        match invalid_client.latest() {
+        match invalid_client.get(expected_round) {
+            Ok(_beacon) => panic!("Beacon should not validate"),
+            Err(_err) => (),
+        };
+
+        // test with incorrect round
+        let chained_info = chained_chain_info();
+        let invalid_client = HttpClient::new(
+            valid_server.url().as_str(),
+            Some(ChainOptions::new(
+                true,
+                false,
+                Some(ChainVerification::new(
+                    Some(chained_info.hash()),
+                    Some(chained_info.public_key()),
+                )),
+            )),
+        )
+        .unwrap();
+
+        match invalid_client.get(invalid_round) {
             Ok(_beacon) => panic!("Beacon should not validate"),
             Err(_err) => (),
         };
