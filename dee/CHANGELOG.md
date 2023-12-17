@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Update dependencies
+
 ## [0.0.14] - 2023-08-30
 
-### Add
+### Added
 
 - Improved error messages on network failure
 - Automatically set upstream on the first added remote

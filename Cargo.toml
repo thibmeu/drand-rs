@@ -4,3 +4,9 @@ members = [
     "dee",
     "drand_core",
 ]
+
+[workspace.dependencies]
+hex = "0.4.3"
+serde = "1.0.193"
+serde_json = "1.0.108"
+time = "0.3.30"
