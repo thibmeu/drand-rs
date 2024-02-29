@@ -129,9 +129,7 @@ impl HttpClient {
             .call()
             .map_err(|e| -> DrandError {
                 match e {
-                    ureq::Error::Status(code, _) if code == 404 => {
-                        Box::new(BeaconError::NotFound).into()
-                    }
+                    ureq::Error::Status(404, _) => Box::new(BeaconError::NotFound).into(),
                     _ => Box::new(HttpClientError::RequestFailed(e.into())).into(),
                 }
             })?

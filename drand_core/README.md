@@ -40,7 +40,7 @@ The reference interroperable Go implementation is available at [drand/drand](htt
 
 | Environment        | CLI Command                |
 |:-------------------|:---------------------------|
-| Cargo (Rust 1.70+) | `cargo install drand_core` |
+| Cargo (Rust 1.74+) | `cargo install drand_core` |
 
 The library is tested against the following targets: `x86_64-unknown-linux-gnu`, `armv7-unknown-linux-gnueabihf`, `aarch64-unknown-linux-gnu`, `wasm32-unknown-unknown`
 
@@ -62,12 +62,12 @@ Code examples are provided in [drand_core/examples](./examples). You can run the
 
 ### Common remotes
 
-| ID                   | Remote                                                                                          | Timelock encryption |
-| :--------------------|:------------------------------------------------------------------------------------------------|:--------------------|
+| ID                    | Remote                                                                                          | Timelock encryption |
+| :---------------------|:------------------------------------------------------------------------------------------------|:--------------------|
 | `quicknet-cloudflare` | `https://drand.cloudflare.com/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971` | Yes                 |
 | `quicknet-pl`         | `https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`         | Yes                 |
-| `mainnet-cloudflare` | `https://drand.cloudflare.com`                                                                  | No                  |
-| `mainnet-pl`         | `https://api.drand.sh`                                                                          | No                  |
+| `mainnet-cloudflare`  | `https://drand.cloudflare.com`                                                                  | No                  |
+| `mainnet-pl`          | `https://api.drand.sh`                                                                          | No                  |
 
 `drand_core` does not come with a default remote beacon. You should decide whichever suit your needs.
 
