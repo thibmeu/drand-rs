@@ -44,9 +44,9 @@ Retrieve public randomness, and encrypt your files to the future. **dee** provid
 
 ## Installation
 
-| Environment | CLI Command |
-|:------------|:------------|
-| Cargo (Rust 1.70+) | `cargo install dee --git https://github.com/thibmeu/drand-rs` |
+| Environment        | CLI Command                                                   |
+|:-------------------|:--------------------------------------------------------------|
+| Cargo (Rust 1.74+) | `cargo install dee --git https://github.com/thibmeu/drand-rs` |
 
 On Linux, Windows, or macOS, you can use the [pre-built binaries](https://github.com/thibmeu/drand-rs/releases).
 
@@ -103,12 +103,12 @@ Hello dee!
 
 ### Common remotes
 
-| ID                   | Remote                                                                                          | Timelock encryption |
-| :--------------------|:------------------------------------------------------------------------------------------------|:--------------------|
+| ID                    | Remote                                                                                          | Timelock encryption |
+| :---------------------|:------------------------------------------------------------------------------------------------|:--------------------|
 | `quicknet-cloudflare` | `https://drand.cloudflare.com/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971` | Yes                 |
 | `quicknet-pl`         | `https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971`         | Yes                 |
-| `mainnet-cloudflare` | `https://drand.cloudflare.com`                                                                  | No                  |
-| `mainnet-pl`         | `https://api.drand.sh`                                                                          | No                  |
+| `mainnet-cloudflare`  | `https://drand.cloudflare.com`                                                                  | No                  |
+| `mainnet-pl`          | `https://api.drand.sh`                                                                          | No                  |
 
 `dee` does not come with a default remote beacon. You should decide whichever suit your needs.
 

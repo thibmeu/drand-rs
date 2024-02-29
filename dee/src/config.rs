@@ -14,8 +14,8 @@ pub struct Local {
 }
 
 impl Local {
-    const APP_NAME: &str = env!("CARGO_PKG_NAME");
-    const CONFIG_NAME: Option<&str> = Some("default");
+    const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
+    const CONFIG_NAME: Option<&'static str> = Some("default");
 
     pub fn load() -> Self {
         confy::load(Self::APP_NAME, Self::CONFIG_NAME).unwrap()

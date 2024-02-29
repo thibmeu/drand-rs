@@ -15,7 +15,7 @@ fn main() {
     let mut rng = ChaCha20Rng::from_seed(seed);
 
     // Flip a coin using the seeded RNG.
-    let coin = vec!["HEAD", "TAIL"];
+    let coin = ["HEAD", "TAIL"];
     let flip = coin.choose(&mut rng).unwrap();
     println!("{flip} (round {round})");
 }
