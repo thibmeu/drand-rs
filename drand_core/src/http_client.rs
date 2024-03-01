@@ -182,6 +182,11 @@ impl HttpClient {
         }
     }
 
+    #[cfg(not(feature = "time"))]
+    pub fn latest(&self) -> Result<RandomnessBeacon> {
+        self.get_with_string("latest".to_owned())
+    }
+
     pub fn get(&self, round_number: u64) -> Result<RandomnessBeacon> {
         self.get_with_string(round_number.to_string())
     }

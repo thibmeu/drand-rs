@@ -8,7 +8,9 @@ use time::{
 
 #[cfg(feature = "time")]
 use crate::chain::ChainTimeInfo;
-use crate::{chain::ChainInfo, DrandError, Result};
+#[cfg(feature = "time")]
+use crate::DrandError;
+use crate::{chain::ChainInfo, Result};
 
 #[derive(Error, Debug)]
 pub enum BeaconError {
