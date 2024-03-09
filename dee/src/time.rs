@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use colored::Colorize;
 use drand_core::beacon::RandomnessBeaconTime;
 use drand_core::{ChainOptions, HttpClient};
@@ -47,5 +47,8 @@ pub fn round_from_option(
         None => client.latest()?.round().to_string(),
     };
 
-    Ok(RandomnessBeaconTime::new(&info.into(), &round))
+    match RandomnessBeaconTime::parse(&info.into(), &round) {
+        Ok(time) => Ok(time),
+        Err(_) => Err(anyhow!("Invalid beacon round \"{}\"", round)),
+    }
 }

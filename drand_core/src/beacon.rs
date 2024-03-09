@@ -248,16 +248,16 @@ impl RandomnessBeaconTime {
     /// * a specific round. e.g. 123,
     /// * a duration. e.g. 30s,
     /// * an RFC3339 date. e.g. 2023-06-28 21:30:22
-    pub fn new(info: &ChainTimeInfo, round: &str) -> Self {
+    pub fn parse(info: &ChainTimeInfo, round: &str) -> Result<Self> {
         match (
             round.parse::<u64>(),
             Self::parse_duration(round),
-            OffsetDateTime::parse(round, &Rfc3339),
+            Self::parse_offset_datetime(round),
         ) {
-            (Ok(round), Err(_), Err(_)) => Self::from_round(info, round),
-            (Err(_), Ok(relative), Err(_)) => Self::from_duration(info, relative),
-            (Err(_), Err(_), Ok(absolute)) => Self::from_datetime(info, absolute),
-            _ => unreachable!(),
+            (Ok(round), Err(_), Err(_)) => Ok(Self::from_round(info, round)),
+            (Err(_), Ok(relative), Err(_)) => Ok(Self::from_duration(info, relative)),
+            (Err(_), Err(_), Ok(absolute)) => Ok(Self::from_datetime(info, absolute)),
+            _ => Err(Box::new(BeaconError::Parsing).into()),
         }
     }
 
@@ -325,6 +325,23 @@ impl RandomnessBeaconTime {
             _char => return Err(Box::new(BeaconError::DurationParse).into()),
         };
         Ok(duration)
+    }
+
+    fn parse_offset_datetime(datetime: &str) -> Result<OffsetDateTime> {
+        let datetime = datetime.to_string().replace(' ', "T");
+        let datetime = if datetime.len() == 10 {
+            format!("{}T00:00:00Z", datetime)
+        } else {
+            datetime
+        };
+        let datetime = if datetime.contains('+') || datetime.ends_with('Z') {
+            datetime
+        } else {
+            format!("{}Z", datetime)
+        };
+
+        OffsetDateTime::parse(&datetime, &Rfc3339)
+            .map_err(|_| -> DrandError { Box::new(BeaconError::Parsing).into() })
     }
 }
 
@@ -497,7 +514,7 @@ pub mod tests {
     fn randomness_beacon_time_success_works() {
         const FIRST_ROUND: u64 = 1;
         let chain = unchained_chain_info().into();
-        let beacon_time = RandomnessBeaconTime::new(&chain, &FIRST_ROUND.to_string());
+        let beacon_time = RandomnessBeaconTime::parse(&chain, &FIRST_ROUND.to_string()).unwrap();
         assert!(
             beacon_time.round() == FIRST_ROUND,
             "Round number has been modified when computing its time"
@@ -512,7 +529,8 @@ pub mod tests {
         );
 
         let genesis_beacon_time =
-            RandomnessBeaconTime::new(&chain, &beacon_time.absolute().format(&Rfc3339).unwrap());
+            RandomnessBeaconTime::parse(&chain, &beacon_time.absolute().format(&Rfc3339).unwrap())
+                .unwrap();
         assert!(
             genesis_beacon_time.round() == FIRST_ROUND,
             "Parsing genesis from absolute time should provide the first round"
@@ -528,7 +546,7 @@ pub mod tests {
 
         const FUTURE_ROUND: u64 = 10 * 1000 * 1000 * 1000; // attempt of max round. cannot use u64::MAX because we're going to perform multiplication and additions, which would go past the limit
         let chain = unchained_chain_info().into();
-        let beacon_time = RandomnessBeaconTime::new(&chain, &FUTURE_ROUND.to_string());
+        let beacon_time = RandomnessBeaconTime::parse(&chain, &FUTURE_ROUND.to_string()).unwrap();
         assert!(
             beacon_time.round() == FUTURE_ROUND,
             "Round number has been modified when computing its time"
@@ -546,8 +564,9 @@ pub mod tests {
         const FUTURE_ROUND_RELATIVE: u64 = 10;
         const FUTURE_ROUND_RELATIVE_TIME: &str = "30s";
         let chain = unchained_chain_info().into();
-        let beacon_time = RandomnessBeaconTime::new(&chain, "0s");
-        let future_beacon_time = RandomnessBeaconTime::new(&chain, FUTURE_ROUND_RELATIVE_TIME);
+        let beacon_time = RandomnessBeaconTime::parse(&chain, "0s").unwrap();
+        let future_beacon_time =
+            RandomnessBeaconTime::parse(&chain, FUTURE_ROUND_RELATIVE_TIME).unwrap();
         assert!(
             beacon_time.round() + FUTURE_ROUND_RELATIVE == future_beacon_time.round(),
             "Round number should match period*difference in round"

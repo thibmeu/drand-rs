@@ -103,7 +103,10 @@ pub fn rand(
     let latest = beacon.is_none();
 
     let beacon = beacon.unwrap_or("0s".to_owned());
-    let time = RandomnessBeaconTime::new(&info.clone().into(), &beacon);
+    let time = match RandomnessBeaconTime::parse(&info.clone().into(), &beacon) {
+        Ok(time) => time,
+        Err(_) => return Err(anyhow!("Invalid beacon round \"{beacon}\"")),
+    };
 
     let client = HttpClient::new(
         &base_url,

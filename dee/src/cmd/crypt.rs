@@ -223,7 +223,15 @@ impl Print for InspectResult {
         if let Some(chain) = self.chain() {
             let format =
                 time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]Z")?;
-            let time = RandomnessBeaconTime::new(&chain.into(), &self.round().to_string());
+            let time = match RandomnessBeaconTime::parse(&chain.into(), &self.round().to_string()) {
+                Ok(time) => time,
+                Err(_) => {
+                    return Err(anyhow!(
+                        "Invalid beacon round \"{round}\"",
+                        round = self.round()
+                    ))
+                }
+            };
             let relative = time.relative();
             let seconds = relative.whole_seconds().abs() % 60;
             let minutes = (relative.whole_minutes()).abs() % 60;

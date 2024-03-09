@@ -175,7 +175,8 @@ impl HttpClient {
         if self.options().is_beacon_verification() {
             let info = self.chain_info()?;
             let now = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
-            let time = RandomnessBeaconTime::new(&info.into(), &now);
+            let time =
+                RandomnessBeaconTime::parse(&info.into(), &now).expect("time should be valid");
             self.get_with_string(time.round().to_string())
         } else {
             self.get_with_string("latest".to_owned())
