@@ -691,7 +691,7 @@ dependencies = [
 
 [[package]]
 name = "dee"
-version = "0.0.15"
+version = "0.0.16"
 dependencies = [
  "anyhow",
  "clap",
@@ -787,7 +787,7 @@ dependencies = [
 
 [[package]]
 name = "drand_core"
-version = "0.0.15"
+version = "0.0.16"
 dependencies = [
  "ark-bls12-381",
  "ark-ec",

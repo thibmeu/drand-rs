@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.16] - 2024-03-09
+
 ### Changed
 
 - Change RFC 3339 datetime parsing to allow space and date
