@@ -35,10 +35,10 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 anyhow = "1.0.80"
-clap = { version = "4.5.1", features = ["derive"] }
+clap = { version = "4.5.2", features = ["derive"] }
 clap-verbosity-flag = "2.2.0"
 colored = "2.1.0"
-confy = "0.5.1"
+confy = "0.6.1"
 drand_core = { path = "../drand_core", version = "0.0.15" }
 env_logger = "0.10.2"
 hex = { workspace = true }
@@ -50,7 +50,7 @@ tlock_age = { features = ["armor"], version = "0.0.5" }
 tlock_age_non_rfc9380 = { package="tlock_age", version = "0.0.3", features = ["armor"] }
 
 [build-dependencies]
-clap = "4.5.1"
+clap = "4.5.2"
 clap-verbosity-flag = "2.2.0"
 clap_complete = "4.5.1"
 clap_mangen = "0.2.20"

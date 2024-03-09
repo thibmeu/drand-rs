@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Update dependencies
+
+### Fix
+
+- Fix error message when round cannot be parsed
+
 ## [0.0.15] - 2024-02-29
 
 ### Changed
