@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.87
+      - uses: dtolnay/rust-toolchain@1.87.0
       - name: cargo fetch
         run: cargo fetch
       - name: Build tests
@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.87
+      - uses: dtolnay/rust-toolchain@1.87.0
         with:
           targets: ${{ matrix.target }}
       - name: cargo fetch
@@ -45,17 +45,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.87
+      - uses: dtolnay/rust-toolchain@1.87.0
       - name: cargo check
         run: cargo check --tests --examples --benches --all-features
 
   clippy:
-    name: Clippy (1.87)
+    name: Clippy (1.87.0)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.87
+      - uses: dtolnay/rust-toolchain@1.87.0
         with:
           components: clippy
       - name: Clippy check
@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.87
+      - uses: dtolnay/rust-toolchain@1.87.0
       - name: cargo fetch
         run: cargo fetch
       # Ensure intra-documentation links all resolve correctly
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.87
+      - uses: dtolnay/rust-toolchain@1.87.0
         with:
           components: rustfmt
       - name: Check formatting
