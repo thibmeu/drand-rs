@@ -1,7 +1,7 @@
 [package]
 name = "dee"
 description = "An cli for drand, with support for timelock encryption."
-version = "0.0.17"
+version = "0.0.18"
 authors = ["Thibault Meunier <crates@thibault.uk>"]
 edition = "2021"
 readme = "../README.md"
@@ -46,7 +46,7 @@ log = "0.4"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 time = { workspace = true, features = ["parsing", "serde-well-known"] }
-tlock_age = { features = ["armor"], version = "0.0.5" }
+tlock_age = { features = ["armor"], version = "0.0.8" }
 tlock_age_non_rfc9380 = { package="tlock_age", version = "0.0.3", features = ["armor"] }
 
 [build-dependencies]
