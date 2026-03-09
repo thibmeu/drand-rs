@@ -8,24 +8,31 @@
 //!
 //! ## Usage
 //!
-//! ```rust
-//! use drand_core::HttpClient;
-//!
-//! // Create a new client
-//! let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
-//!
-//! // Get the latest beacon. By default, it verifies its signature against the chain info.
-//! let beacon = client.latest().unwrap();
-//!
-//! // Print the beacon
-//! println!("{:?}", beacon);
-//! ```
+#![cfg_attr(
+    not(target_arch = "wasm32"),
+    doc = r#"
+```rust
+use drand_core::HttpClient;
+
+// Create a new client
+let client: HttpClient = "https://drand.cloudflare.com".try_into().unwrap();
+
+// Get the latest beacon. By default, it verifies its signature against the chain info.
+let beacon = client.latest().unwrap();
+
+// Print the beacon
+println!("{:?}", beacon);
+```
+"#
+)]
 
 pub mod beacon;
 mod bls_signatures;
 pub mod chain;
 pub use chain::ChainOptions;
+#[cfg(not(target_arch = "wasm32"))]
 mod http_client;
+#[cfg(not(target_arch = "wasm32"))]
 pub use http_client::HttpClient;
 use thiserror::Error;
 
@@ -33,6 +40,7 @@ use thiserror::Error;
 pub enum DrandError {
     #[error(transparent)]
     Beacon(#[from] Box<beacon::BeaconError>),
+    #[cfg(not(target_arch = "wasm32"))]
     #[error(transparent)]
     HTTPClient(#[from] Box<http_client::HttpClientError>),
     #[error(transparent)]

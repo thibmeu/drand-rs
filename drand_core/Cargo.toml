@@ -23,8 +23,10 @@ serde_json = { workspace = true }
 sha2 = "0.10"
 thiserror = "2.0"
 time = { workspace = true, features = ["parsing", "serde-well-known"], optional = true }
-ureq = { version = "2.12", features = ["json"] }
 url = { version = "2.5", features = ["serde"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ureq = { version = "2.12", features = ["json", "native-certs"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
@@ -32,8 +34,7 @@ ring = { version = "0.17", features = ["less-safe-getrandom-custom-or-rdrand", "
 wasm-bindgen = "0.2.88"
 
 [features]
-default = ["time", "native-certs"]
-native-certs = ["ureq/native-certs"]
+default = ["time"]
 time = ["dep:time"]
 
 [dev-dependencies]
