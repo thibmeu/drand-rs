@@ -5,10 +5,10 @@ members = [
     "drand_core",
 ]
 
-resolver = "1"
+resolver = "2"
 
 [workspace.dependencies]
 hex = "0.4.3"
 serde = "1.0.197"
 serde_json = "1.0.114"
-time = "0.3.34"
+time = "0.3.35"

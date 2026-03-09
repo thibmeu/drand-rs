@@ -321,10 +321,7 @@ impl<R: std::io::Read> std::io::Read for ResetReader<R> {
         }
 
         // Now read from the reader
-        let r = match self.inner.read(from_read) {
-            Ok(size) => size,
-            Err(e) => return Err(e),
-        };
+        let r = self.inner.read(from_read)?;
         if self.is_buffer_enabled {
             self.buf.append(from_read[..r].to_vec().as_mut());
             self.offset += r;

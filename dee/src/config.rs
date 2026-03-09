@@ -97,9 +97,8 @@ impl Local {
 
     pub fn set_upstream_and_chain(&mut self, set_upstream: Option<String>) -> Result<ConfigChain> {
         let chain = set_upstream
-            .map(|upstream| {
-                self.set_upstream(&upstream).unwrap();
-                upstream
+            .inspect(|upstream| {
+                self.set_upstream(upstream).unwrap();
             })
             .or(self.upstream());
 

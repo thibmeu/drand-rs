@@ -12,18 +12,18 @@ categories = ["cryptography"]
 license = "MIT"
 
 [dependencies]
-ark-bls12-381 = "0.4.0"
-ark-ec = "0.4.2"
-ark-ff = "0.4.2"
-ark-serialize = "0.4.2"
+ark-bls12-381 = "0.5"
+ark-ec = "0.5"
+ark-ff = "0.5"
+ark-serialize = "0.5"
 hex = { workspace = true, features = ["serde"] }
-rand = "0.8.5"
+rand = "0.8"
 serde = { workspace = true, features = ["derive", "rc"] }
 serde_json = { workspace = true }
-sha2 = "0.10.8"
-thiserror = "1.0.57"
+sha2 = "0.10"
+thiserror = "2.0"
 time = { workspace = true, features = ["parsing", "serde-well-known"], optional = true }
-ureq = { version = "2.9.6", features = ["json"] }
+ureq = { version = "2.12", features = ["json"] }
 url = { version = "2.5", features = ["serde"] }
 
 [target.'cfg(wasm32)'.dependencies]
