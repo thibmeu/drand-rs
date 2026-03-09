@@ -26,9 +26,9 @@ time = { workspace = true, features = ["parsing", "serde-well-known"], optional 
 ureq = { version = "2.12", features = ["json"] }
 url = { version = "2.5", features = ["serde"] }
 
-[target.'cfg(wasm32)'.dependencies]
-getrandom = { version = "0.2.12", features = ["js"] }
-ring = { version = "0.17.8", features = ["less-safe-getrandom-custom-or-rdrand", "wasm32_unknown_unknown_js"]}
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+ring = { version = "0.17", features = ["less-safe-getrandom-custom-or-rdrand", "wasm32_unknown_unknown_js"]}
 
 [features]
 default = ["time", "native-certs"]
