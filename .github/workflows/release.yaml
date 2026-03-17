@@ -60,7 +60,7 @@ jobs:
             asset_suffix: x86_64-darwin.tar.gz
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -137,7 +137,7 @@ jobs:
               linker = "aarch64-linux-gnu-gcc"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
