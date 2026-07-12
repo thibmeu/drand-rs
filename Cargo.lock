@@ -974,7 +974,7 @@ dependencies = [
 
 [[package]]
 name = "dee"
-version = "0.0.19"
+version = "0.0.20"
 dependencies = [
  "anyhow",
  "clap",
@@ -991,8 +991,8 @@ dependencies = [
  "serde",
  "serde_json",
  "time",
+ "tlock_age 0.0.10",
  "tlock_age 0.0.3",
- "tlock_age 0.0.9",
 ]
 
 [[package]]
@@ -3309,9 +3309,9 @@ dependencies = [
 
 [[package]]
 name = "tlock"
-version = "0.0.9"
+version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36763065d9ff3e8caf6546d10c9278af6e49703c899c39fc1a782644ccf166c7"
+checksum = "ee8919cf1140e9a6a481498f8feded85bcc2dacc44e9c2b4c293f45a99c46299"
 dependencies = [
  "anyhow",
  "ark-bls12-381 0.6.0",
@@ -3344,9 +3344,9 @@ dependencies = [
 
 [[package]]
 name = "tlock_age"
-version = "0.0.9"
+version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "399fb5e3a3155219bdcda771325a2e33dfc98ce69431036f0e6e4bf01a024fd9"
+checksum = "760eb66d2af67f49b6bd875878e137346c265b92007005ac884ad8f1151c990f"
 dependencies = [
  "age 0.11.3",
  "age-core 0.11.0",
@@ -3354,7 +3354,7 @@ dependencies = [
  "getrandom 0.2.17",
  "hex",
  "thiserror 2.0.18",
- "tlock 0.0.9",
+ "tlock 0.0.10",
  "zeroize",
 ]
 
