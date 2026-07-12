@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use colored::Colorize;
 use drand_core::HttpClient;
-use log::{log_enabled, Level};
+use log::{Level, log_enabled};
 use time::OffsetDateTime;
 
 use crate::{
@@ -42,10 +42,10 @@ pub fn rename(cfg: &mut config::Local, old: String, new: String) -> Result<Strin
 
     cfg.rename_chain(old.clone(), new.clone())?;
 
-    if let Some(upstream) = cfg.upstream() {
-        if upstream == old {
-            cfg.set_upstream(&new)?;
-        }
+    if let Some(upstream) = cfg.upstream()
+        && upstream == old
+    {
+        cfg.set_upstream(&new)?;
     }
 
     Ok(new)

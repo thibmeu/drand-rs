@@ -1,18 +1,18 @@
 use std::{cmp::Ordering, fs, io};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use colored::Colorize;
 use drand_core::{
+    ChainOptions, DrandError, HttpClient,
     beacon::{BeaconError, RandomnessBeaconTime},
     chain::ChainInfo,
-    ChainOptions, DrandError, HttpClient,
 };
 use serde::Serialize;
 use tlock_age::Header;
 
 use crate::{
     config::{self, ConfigChain},
-    print::{print_with_format, Format, Print},
+    print::{Format, Print, print_with_format},
 };
 
 pub fn file_or_stdin(input: Option<String>) -> Result<Box<dyn io::Read>> {
@@ -129,11 +129,11 @@ pub fn decrypt(
 
     let info = chain.info();
 
-    if header.hash() != info.hash() {
-        if let Some((name, _chain_config)) = cfg.chain_by_hash(&header.hash()) {
-            return Err(anyhow!("decryption failed.\nDid you forget `-u {name}`?"));
-        }
-    };
+    if header.hash() != info.hash()
+        && let Some((name, _chain_config)) = cfg.chain_by_hash(&header.hash())
+    {
+        return Err(anyhow!("decryption failed.\nDid you forget `-u {name}`?"));
+    }
 
     let client = HttpClient::new(
         &chain.url(),
@@ -221,15 +221,16 @@ impl Print for InspectResult {
         // Round information
         output.push(format!("{: <11}: {}", "Round".bold(), self.round()));
         if let Some(chain) = self.chain() {
-            let format =
-                time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]Z")?;
+            let format = time::format_description::parse_borrowed::<2>(
+                "[year]-[month]-[day]T[hour]:[minute]:[second]Z",
+            )?;
             let time = match RandomnessBeaconTime::parse(&chain.into(), &self.round().to_string()) {
                 Ok(time) => time,
                 Err(_) => {
                     return Err(anyhow!(
                         "Invalid beacon round \"{round}\"",
                         round = self.round()
-                    ))
+                    ));
                 }
             };
             let relative = time.relative();

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{beacon::RandomnessBeacon, Result};
+use crate::{Result, beacon::RandomnessBeacon};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 /// Additional information about the chain.

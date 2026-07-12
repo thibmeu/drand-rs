@@ -2,7 +2,7 @@
 mod cli;
 
 use clap_complete::Shell::{Bash, Elvish, Fish, PowerShell, Zsh};
-use flate2::{write::GzEncoder, Compression};
+use flate2::{Compression, write::GzEncoder};
 use std::io::Write;
 
 const COMPLETIONS_DIR: &str = "../target/completions";

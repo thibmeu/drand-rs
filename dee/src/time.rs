@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use colored::Colorize;
 use drand_core::beacon::RandomnessBeaconTime;
 use drand_core::{ChainOptions, HttpClient};

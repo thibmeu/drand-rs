@@ -1,17 +1,17 @@
 use std::cmp::Ordering;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 use colored::Colorize;
 use drand_core::{
-    beacon::{BeaconError, RandomnessBeacon, RandomnessBeaconTime},
     ChainOptions, DrandError, HttpClient,
+    beacon::{BeaconError, RandomnessBeacon, RandomnessBeaconTime},
 };
 use serde::Serialize;
 
 use crate::{
     config::{self, ConfigChain},
-    print::{print_with_format, Format, Print},
+    print::{Format, Print, print_with_format},
 };
 
 #[derive(Serialize)]
@@ -31,7 +31,7 @@ impl Print for RandResult {
         match self.beacon.as_ref() {
             Some(beacon) => Ok(hex::encode(beacon.randomness())),
             None => {
-                let format = time::format_description::parse(
+                let format = time::format_description::parse_borrowed::<2>(
                     "[year]-[month]-[day]T[hour]:[minute]:[second]Z",
                 )?;
                 let relative = self.time.relative();
@@ -49,8 +49,9 @@ impl Print for RandResult {
         }
     }
     fn long(&self) -> Result<String> {
-        let format =
-            time::format_description::parse("[year]-[month]-[day]T[hour]:[minute]:[second]Z")?;
+        let format = time::format_description::parse_borrowed::<2>(
+            "[year]-[month]-[day]T[hour]:[minute]:[second]Z",
+        )?;
         let relative = self.time.relative();
         let seconds = relative.whole_seconds().abs() % 60;
         let minutes = (relative.whole_minutes()).abs() % 60;

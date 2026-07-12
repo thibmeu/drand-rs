@@ -3,14 +3,14 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 #[cfg(feature = "time")]
 use time::{
-    ext::NumericalDuration, format_description::well_known::Rfc3339, Duration, OffsetDateTime,
+    Duration, OffsetDateTime, ext::NumericalDuration, format_description::well_known::Rfc3339,
 };
 
 #[cfg(feature = "time")]
-use crate::chain::ChainTimeInfo;
-#[cfg(feature = "time")]
 use crate::DrandError;
-use crate::{chain::ChainInfo, Result};
+#[cfg(feature = "time")]
+use crate::chain::ChainTimeInfo;
+use crate::{Result, chain::ChainInfo};
 
 #[derive(Error, Debug)]
 pub enum BeaconError {
@@ -487,7 +487,10 @@ pub mod tests {
         }
 
         match unchained_beacon_on_g1().verify(unchained_chain_info()) {
-            Ok(ok) => assert!(!ok, "Unchained beacon on G1 should not validate on chained info"),
+            Ok(ok) => assert!(
+                !ok,
+                "Unchained beacon on G1 should not validate on chained info"
+            ),
             Err(_err) => panic!(
                 "Unchained beacon on G1 should not validate on chained info without returning an error"
             ),
@@ -496,14 +499,20 @@ pub mod tests {
         // Regression test to confirm the introduction of RFC compliant chain does not break existing integration
         // Original change is on [drand/drand#1249](https://github.com/drand/drand/pull/1249)
         match unchained_beacon_on_g1().verify(unchained_chain_on_g1_rfc_info()) {
-            Ok(ok) => assert!(!ok, "Unchained beacon on G1 (not RFC compliant) should not validate on unchained compliant info"),
+            Ok(ok) => assert!(
+                !ok,
+                "Unchained beacon on G1 (not RFC compliant) should not validate on unchained compliant info"
+            ),
             Err(_err) => panic!(
                 "Unchained beacon on G1 (non Hash to curve RFC compliant) should not validate on unchained G1 info without returning an error"
             ),
         }
 
         match unchained_beacon_on_g1_rfc().verify(unchained_chain_on_g1_info()) {
-            Ok(ok) => assert!(!ok, "Unchained beacon on G1 should not validate on unchained G1 (non Hash to curve RFC compliant) info"),
+            Ok(ok) => assert!(
+                !ok,
+                "Unchained beacon on G1 should not validate on unchained G1 (non Hash to curve RFC compliant) info"
+            ),
             Err(_err) => panic!(
                 "Unchained beacon on G1 should not validate on unchained G1 (non Hash to curve RFC compliant) info without returning an error"
             ),

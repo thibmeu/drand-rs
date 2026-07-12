@@ -2,15 +2,15 @@
 /// inspired from https://github.com/noislabs/drand-verify/blob/1017235f6bcfcc9fb433926c0dc1b9a013bd4df3/src/verify.rs#L58
 use std::ops::Neg;
 
-use ark_bls12_381::{g1, g2, G1Affine, G2Affine};
+use ark_bls12_381::{G1Affine, G2Affine, g1, g2};
 use ark_ec::{
+    AffineRepr,
     bls12::Bls12,
-    hashing::{curve_maps::wb::WBMap, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
+    hashing::{HashToCurve, curve_maps::wb::WBMap, map_to_curve_hasher::MapToCurveBasedHasher},
     models::short_weierstrass,
     pairing::Pairing,
-    AffineRepr,
 };
-use ark_ff::{field_hashers::DefaultFieldHasher, Zero};
+use ark_ff::{Zero, field_hashers::DefaultFieldHasher};
 use ark_serialize::CanonicalDeserialize;
 use thiserror::Error;
 

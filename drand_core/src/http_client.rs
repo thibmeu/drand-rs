@@ -1,15 +1,15 @@
 use std::{str::FromStr, sync::Mutex};
 use thiserror::Error;
 #[cfg(feature = "time")]
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 use url::Url;
 
 #[cfg(feature = "time")]
 use crate::beacon::RandomnessBeaconTime;
 use crate::{
+    DrandError, Result,
     beacon::{ApiBeacon, BeaconError, RandomnessBeacon},
     chain::{ChainInfo, ChainOptions},
-    DrandError, Result,
 };
 
 #[derive(Error, Debug)]
@@ -56,12 +56,19 @@ impl HttpClient {
             base_url: url,
             options: options.unwrap_or_default(),
             cached_chain_info: Mutex::new(None),
-            http_client: ureq::AgentBuilder::new().build(),
+            http_client: ureq::Agent::config_builder()
+                .tls_config(
+                    ureq::tls::TlsConfig::builder()
+                        .root_certs(ureq::tls::RootCerts::PlatformVerifier)
+                        .build(),
+                )
+                .build()
+                .new_agent(),
         })
     }
 
     fn chain_info_no_cache(&self) -> Result<ChainInfo> {
-        let response = self
+        let mut response = self
             .http_client
             .get(
                 self.base_url
@@ -69,17 +76,21 @@ impl HttpClient {
                     .map_err(|e| -> DrandError { Box::new(HttpClientError::ParseURL(e)).into() })?
                     .as_str(),
             )
+            .config()
+            .http_status_as_error(false)
+            .build()
             .call()
             .map_err(|e| -> DrandError {
                 Box::new(HttpClientError::RequestFailed(e.into())).into()
             })?;
-        let info = if response.status() < 400 {
+        let info = if response.status().as_u16() < 400 {
             response
-                .into_json::<ChainInfo>()
+                .body_mut()
+                .read_json::<ChainInfo>()
                 .map_err(|_| Box::new(BeaconError::Parsing))?
         } else {
             return Err(Box::new(HttpClientError::FailedToRetrieveChainInfo {
-                message: response.into_string().unwrap_or_default(),
+                message: response.body_mut().read_to_string().unwrap_or_default(),
             })
             .into());
         };
@@ -129,11 +140,12 @@ impl HttpClient {
             .call()
             .map_err(|e| -> DrandError {
                 match e {
-                    ureq::Error::Status(404, _) => Box::new(BeaconError::NotFound).into(),
+                    ureq::Error::StatusCode(404) => Box::new(BeaconError::NotFound).into(),
                     _ => Box::new(HttpClientError::RequestFailed(e.into())).into(),
                 }
             })?
-            .into_json::<ApiBeacon>()
+            .body_mut()
+            .read_json::<ApiBeacon>()
             .map_err(|_| -> DrandError { Box::new(BeaconError::Parsing).into() })?;
 
         let info = self.chain_info()?;
@@ -238,7 +250,7 @@ impl FromStr for HttpClient {
 mod tests {
     use crate::beacon::{tests::chained_beacon, tests::invalid_beacon, tests::unchained_beacon};
     use crate::chain::{
-        tests::chained_chain_info, tests::unchained_chain_info, ChainOptions, ChainVerification,
+        ChainOptions, ChainVerification, tests::chained_chain_info, tests::unchained_chain_info,
     };
     #[cfg(feature = "time")]
     use time::Duration;

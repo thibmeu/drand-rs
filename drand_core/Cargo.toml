@@ -1,9 +1,9 @@
 [package]
 name = "drand_core"
 description = "A drand client library."
-version = "0.0.18"
+version = "0.0.19"
 authors = ["Thibault Meunier <crates@thibault.uk>"]
-edition = "2021"
+edition = "2024"
 readme = "./README.md"
 homepage = "https://github.com/thibmeu/drand-rs/tree/main/drand_core"
 repository = "https://github.com/thibmeu/drand-rs"
@@ -12,10 +12,10 @@ categories = ["cryptography"]
 license = "MIT"
 
 [dependencies]
-ark-bls12-381 = "0.5"
-ark-ec = "0.5"
-ark-ff = "0.5"
-ark-serialize = "0.5"
+ark-bls12-381 = "0.6"
+ark-ec = "0.6"
+ark-ff = "0.6"
+ark-serialize = "0.6"
 hex = { workspace = true, features = ["serde"] }
 rand = "0.8"
 serde = { workspace = true, features = ["derive", "rc"] }
@@ -26,7 +26,7 @@ time = { workspace = true, features = ["parsing", "serde-well-known"], optional 
 url = { version = "2.5", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-ureq = { version = "2.12", features = ["json", "native-certs"] }
+ureq = { version = "3.3", features = ["json", "platform-verifier"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
@@ -38,6 +38,6 @@ default = ["time"]
 time = ["dep:time"]
 
 [dev-dependencies]
-hex-literal = "0.4.1"
+hex-literal = "1"
 mockito = "1.4.0"
 rand_chacha = "0.3.1"

@@ -61,10 +61,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
       - name: Add target
         run: rustup target add ${{ matrix.target }}
         if: matrix.target != ''
@@ -76,7 +73,7 @@ jobs:
       - name: Set up .cargo/config
         run: |
           mkdir .cargo
-          echo '${{ matrix.cargo_config }}' >.cargo/config
+          echo '${{ matrix.cargo_config }}' >.cargo/config.toml
         if: matrix.cargo_config != ''
 
       - name: cargo build
@@ -138,17 +135,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
       - name: Add target
         run: rustup target add ${{ matrix.target }}
       - name: cargo install cargo-deb
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-deb
+        run: cargo install cargo-deb
 
       - name: Install build dependencies
         run: sudo apt update && sudo apt install ${{ matrix.build_deps }}
@@ -157,7 +148,7 @@ jobs:
       - name: Set up .cargo/config
         run: |
           mkdir .cargo
-          echo '${{ matrix.cargo_config }}' >.cargo/config
+          echo '${{ matrix.cargo_config }}' >.cargo/config.toml
         if: matrix.cargo_config != ''
 
       - name: cargo build
@@ -165,10 +156,7 @@ jobs:
         working-directory: ./dee
 
       - name: cargo deb
-        uses: actions-rs/cargo@v1
-        with:
-          command: deb
-          args: --package dee --no-build --target ${{ matrix.target }} ${{ matrix.deb_flags }}
+        run: cargo deb --package dee --no-build --target ${{ matrix.target }} ${{ matrix.deb_flags }}
 
       - name: Upload Debian package to release
         uses: svenstaro/upload-release-action@2.11.5

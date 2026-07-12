@@ -1,5 +1,5 @@
 use drand_core::HttpClient;
-use rand::{seq::SliceRandom, SeedableRng};
+use rand::{SeedableRng, seq::SliceRandom};
 use rand_chacha::ChaCha20Rng;
 
 /// Flip a coin using the latest drand beacon.
