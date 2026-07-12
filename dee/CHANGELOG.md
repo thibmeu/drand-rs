@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.19] - 2026-07-12
+
+### Changed
+
+- Update tlock_age to 0.0.9
+- Update colored to 3, and confy to 2
+- Migrate to Rust edition 2024, and update Rust to 1.94
+
 ## [0.0.16] - 2024-03-09
 
 ### Changed
