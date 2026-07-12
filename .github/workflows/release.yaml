@@ -60,7 +60,7 @@ jobs:
             asset_suffix: x86_64-darwin.tar.gz
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - name: Add target
         run: rustup target add ${{ matrix.target }}
@@ -134,7 +134,7 @@ jobs:
               linker = "aarch64-linux-gnu-gcc"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - name: Add target
         run: rustup target add ${{ matrix.target }}
