@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.0.21] - 2026-10-13
+
+### Removed
+
+- Support for timelock encryption on non-RFC 9380 chains (legacy tlock_age 0.0.3). This drops dependencies with known vulnerabilities
+
+### Changed
+
+- Update h2 to 0.4.20 and rustls to 0.23.45
+
 ## [0.0.20] - 2026-07-12
 
 ### Changed

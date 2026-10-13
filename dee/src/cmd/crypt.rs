@@ -47,6 +47,9 @@ pub fn encrypt(
     if !info.is_unchained() {
         return Err(anyhow!("remote must use unchained signatures"));
     }
+    if !info.is_rfc9380() {
+        return Err(anyhow!("remote must use RFC 9380 hash to curve"));
+    }
 
     let beacon_time = crate::time::round_from_option(&chain, round)?;
 
@@ -54,26 +57,16 @@ pub fn encrypt(
     let dst = file_or_stdout(output)?;
     if armor {
         let mut dst = tlock_age::armor::ArmoredWriter::wrap_output(dst)?;
-        if info.is_rfc9380() {
-            tlock_age::encrypt(
-                &mut dst,
-                src,
-                &info.hash(),
-                &info.public_key(),
-                beacon_time.round(),
-            )?;
-        } else {
-            tlock_age_non_rfc9380::encrypt(
-                &mut dst,
-                src,
-                &info.hash(),
-                &info.public_key(),
-                beacon_time.round(),
-            )?;
-        }
+        tlock_age::encrypt(
+            &mut dst,
+            src,
+            &info.hash(),
+            &info.public_key(),
+            beacon_time.round(),
+        )?;
         dst.finish()?;
         Ok(())
-    } else if info.is_rfc9380() {
+    } else {
         tlock_age::encrypt(
             dst,
             src,
@@ -81,16 +74,6 @@ pub fn encrypt(
             &info.public_key(),
             beacon_time.round(),
         )
-        .map_err(|err| anyhow!(err))
-    } else {
-        tlock_age_non_rfc9380::encrypt(
-            dst,
-            src,
-            &info.hash(),
-            &info.public_key(),
-            beacon_time.round(),
-        )
-        .map_err(|err| anyhow!(err))
     }
     .map(|()| String::from(""))
     .map_err(|err| anyhow!(err))
@@ -151,16 +134,14 @@ pub fn decrypt(
         Err(e) => return Err(e.into()),
     };
 
-    let dst = file_or_stdout(output)?;
-    if info.is_rfc9380() {
-        tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature())
-            .map(|()| String::from(""))
-            .map_err(|err| anyhow!(err))
-    } else {
-        tlock_age_non_rfc9380::decrypt(dst, src, &header.hash(), &beacon.signature())
-            .map(|()| String::from(""))
-            .map_err(|err| anyhow!(err))
+    if !info.is_rfc9380() {
+        return Err(anyhow!("remote must use RFC 9380 hash to curve"));
     }
+
+    let dst = file_or_stdout(output)?;
+    tlock_age::decrypt(dst, src, &header.hash(), &beacon.signature())
+        .map(|()| String::from(""))
+        .map_err(|err| anyhow!(err))
 }
 
 #[derive(Serialize)]
